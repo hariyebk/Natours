@@ -13,9 +13,12 @@ router.post('/login', authentication.login)
 router.post('/forgotPassword', authentication.forgotPassword)
 router.patch('/resetPassword/:token', authentication.resetPassword)
 router.patch('/updateMyPassword', authentication.protect ,authentication.updatePassword)
-
-
-
+// for user to update his data
+router
+.patch('/updateMe', authentication.protect, routehandlers.updateMe)
+// for user to Inactivate his account
+router
+.delete('/deleteMe', authentication.protect, routehandlers.deleteMe)
 //  For system administrator, to get data about users.
     // get all users
 router

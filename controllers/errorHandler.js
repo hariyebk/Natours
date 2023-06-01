@@ -65,9 +65,7 @@ module.exports = (err, req, res, next) => {
         if(error.name === 'JsonWebTokenError') error = handleJsonWebTokenError()
         // for expired tokens
         if(error.name === 'TokenExpiredError') error = handleTokenExpiredError()
-        
         sendErrorPord(error, res)
-
     }  
 }
 // since we passed 4 argumets , express will automatically think that it is an error handling middleware. so when any routeHandler or middleware throws an error as next(err), it will be catched in this global error handling middleware.

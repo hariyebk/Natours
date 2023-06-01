@@ -48,7 +48,12 @@ const userSchema = new mongoose.Schema({
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
-    passwordResetExpires: Date
+    passwordResetExpires: Date,
+    active: {
+        type: Boolean,
+        default: true,
+        select: false
+    }
 },)
 // plain passwords or sensetive informations should not be stored in thwe database.
 // so we need to encrypt the password right before it is saved in the databse. and for that we use a pre middleware
@@ -65,6 +70,12 @@ userSchema.pre('save', function(next){
     // check if the document is modefied and it's not because of new document creation
     if(!this.isModified('password') || this.isNew) return next() // pass, do nothing
     this.passwordChangedAt = Date.now() - 1000
+    next()
+})
+// A query middleware that filters only active users
+userSchema.pre(/^find/g, function(next) {
+    // filter out non active users
+    this.find({active: {$ne: false}})
     next()
 })
 // An instance method is available on all documents of a collection and used for specific kinds of tasks.

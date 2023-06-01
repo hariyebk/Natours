@@ -135,7 +135,7 @@ exports.resetPassword = catchasync( async (req, res, next) => {
         passwordResetExpires: {$gt: Date.now()
         }
     })
-    if(!user) return next(new appError('Token has expired'))
+    if(!user) return next(new appError('Token has expired', 400))
     // change the password 
     user.password = req.body.password
     user.passwordConfirm = req.body.passwordConfirm
@@ -149,10 +149,20 @@ exports.resetPassword = catchasync( async (req, res, next) => {
 })
 
 exports.updatePassword = catchasync( async (req, res, next) => {
-    // 1. Get user 
+    // 1. Get user from req.user 
     const user = await userModel.findById(req.user.id).select('+password')
+    // 2. compare current password with the original password
+    if(! await user.comparePasswords(req.body.currentPassword, user.password)) return next(new appError(`Current password doesn't macth the original password. try again !!`, 400))
+    //3. update the password
+    user.password = req.body.password
+    user.passwordConfirm = req.body.passwordConfirm
+    //4. update database
+    await user.save()
+    // 5. log in user again
+    GenerateToken(user, 200, res)
 })
-// Authorization process
+
+//Authorization process
         // Not all logged in users should have equal previlage.
 exports.authorized = (req,res, next) => {
     // check if the user is admin or lead-guide
