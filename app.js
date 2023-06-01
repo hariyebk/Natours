@@ -4,10 +4,39 @@ const morgan = require('morgan') // logger middleware
 const usersrouter = require('./routes/usersRoutes')
 const appError = require('./utils/appError')
 const globalErrorHandler = require('./controllers/errorHandler')
+const rateLimit = require('express-rate-limit')
+const helmet = require('helmet')
+const mongoSanitize = require('express-mongo-sanitize')
+const xss = require('xss-clean')
+const hpp = require('hpp')
 const app = express();
+// helmet package sets various http headers to secure our application from most common web attacks like cross-site-forgery, cross-site-scripting ...etc
+app.use(helmet())
 // creating a middleware between the request and response to accces body of the request incase of a post request.
 // middlewares
-app.use(express.json()); // parsing the request has to be the first middleware.
+app.use(express.json({limit: '10kb'}));
+// restricting the size of incoming payloads
+ // parsing the request has to be the first middleware.
+
+ // Data Sanitization Against: Nosql injection
+app.use(mongoSanitize()) // removes mongodb query operation signs 
+
+ // Data sanitization Against : Xss(cross-site scripting) attacks
+app.use(xss())
+
+// Prevent parameter pollution from the query string  (ex. duplicte parameters)
+app.use(hpp({
+    // sometimes we may want two same query parameters
+    whitelist: ['duration', 'ratingAvarage', 'ratingQuantity', 'maxGroupSize', 'difficulty', 'price']
+}))
+
+ // Request Limiter: To prevent Brute-Force and DDos Attacks
+const limiter = rateLimit({
+    max: 100,
+    windowMs: 60 * 60 * 1000,
+    message: "Too many requets to handle. Try again later"
+})
+app.use(limiter)
 // custom middlwware 
 // app.use((req, res, next) => {
 //     req.requestedTime = new Date().toISOString()
@@ -45,6 +74,7 @@ app.use(express.json()); // parsing the request has to be the first middleware.
 // mounting the routers for sub paths
 app.use('/api/v1/tours', toursrouter)
 app.use('/api/v1/users', usersrouter)
+
 // handling unhandled routes
         // only works if all the above middleware can't catch the request. so it means it's a wrong path.
 app.all('*', (req, res, next) => {

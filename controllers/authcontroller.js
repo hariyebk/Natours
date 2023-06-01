@@ -14,6 +14,15 @@ const signToken = id => {
 }
 const GenerateToken = (user, statusCode, res) => {
     const token = signToken(user._id)
+    // A cookie is just a small piece of string sent from the server. for future requets from the same server it will be sent with the request together. Every connection between the server and the client should be held by https only.
+    const cookieOptions = {
+        expires: new Date(Date.now()+ process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+        httpOnly: true
+    }
+    // Our jwt should only be stored in httpOnly cookie in the browser to prevent cross site scripting attacks ( A hacker injects a malicious script into our application to Get access in to the local storage in the browser which holds jwt tokens. it's essential to store such kinds of sensetive informations in httpOnly cookies. so that the browser can't modify it)
+    // sending jwt via cookie
+    if(process.env.NODE_ENV === 'production') cookieOptions.secure = true
+    res.cookie('jwt', token, cookieOptions)
     // Logging users as soon as they sign up
     res.status(statusCode).json({
         status: 'success',
