@@ -9,6 +9,7 @@ const router = express.Router();
 
 // A special Api endpoint that doesn't follow the REST philosophy
 router.post('/signup', authentication.signup)
+router.get('/confirmEmail/:token', authentication.confirmEmail)
 router.post('/login', authentication.login)
 router.post('/forgotPassword', authentication.forgotPassword)
 router.patch('/resetPassword/:token', authentication.resetPassword)

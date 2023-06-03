@@ -5,10 +5,13 @@ const usersrouter = require('./routes/usersRoutes')
 const appError = require('./utils/appError')
 const globalErrorHandler = require('./controllers/errorHandler')
 const rateLimit = require('express-rate-limit')
+const session = require('express-session')
 const helmet = require('helmet')
 const mongoSanitize = require('express-mongo-sanitize')
 const xss = require('xss-clean')
 const hpp = require('hpp')
+
+
 const app = express();
 // helmet package sets various http headers to secure our application from most common web attacks like cross-site-forgery, cross-site-scripting ...etc
 app.use(helmet())
@@ -24,19 +27,29 @@ app.use(mongoSanitize()) // removes mongodb query operation signs
  // Data sanitization Against : Xss(cross-site scripting) attacks
 app.use(xss())
 
-// Prevent parameter pollution from the query string  (ex. duplicte parameters)
+// Prevent parameter pollution attacks from the query string  (ex. duplicte parameters)
 app.use(hpp({
-    // sometimes we may want two same query parameters
+    // EXCULDE: sometimes we may want two or more of the same query parameters in the url
     whitelist: ['duration', 'ratingAvarage', 'ratingQuantity', 'maxGroupSize', 'difficulty', 'price']
 }))
 
  // Request Limiter: To prevent Brute-Force and DDos Attacks
+        // The user can only make 100 http requests per hour
 const limiter = rateLimit({
     max: 100,
     windowMs: 60 * 60 * 1000,
     message: "Too many requets to handle. Try again later"
 })
-app.use(limiter)
+app.use('/api', limiter)
+
+// Set up session middleware and store
+       // session-based login attempts tracking
+app.use(session({
+    secret: process.env.JWT_SECRET,
+    resave: true,
+    saveUninitialized: false,
+    store: null
+}))
 // custom middlwware 
 // app.use((req, res, next) => {
 //     req.requestedTime = new Date().toISOString()

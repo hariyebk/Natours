@@ -26,8 +26,8 @@ const GenerateToken = (user, statusCode, res) => {
     // Logging users as soon as they sign up
     res.status(statusCode).json({
         status: 'success',
-        // sending the jwt for the user.
         token,
+        // sending the jwt for the user.
         data: {
             user
         }
@@ -37,8 +37,7 @@ const GenerateToken = (user, statusCode, res) => {
 
 // signing up new users
 exports.signup = catchasync( async (req, res, next) => {
-    // const newuser = await userModel.create(req.body)
-    // security flaw: every user can identify thier role as admin when they signup.
+    // Limiting what we should recieve from the req.body for security measure.
     const newuser = await userModel.create({
         name: req.body.name,
         email: req.body.email,
@@ -47,12 +46,73 @@ exports.signup = catchasync( async (req, res, next) => {
         passwordChangedAt: req.body.passwordChangedAt,
         role: req.body.role
     })
+    // Generate email confirmation token
+    const confirmToken = await newuser.EmailConfirmationToken()
+    // update database
+    await newuser.save({validateBeforeSave: false})
+    // returns the token and sets confirmationToken and confirmationTokenExpires properties on the newuser.
+    const confirmationUrl = `${req.protocol}://${req.get('host')}/api/v1/users/confirmEmail/${confirmToken}`
+    const message = `click the following link to confirm your email ${confirmationUrl}`
+    // send email
+    try{
+        await sendemail({
+            email: req.body.email,
+            subject: 'confirm your email',
+            message
+        })
+        // sending the response
+        res.status(201).json({
+            status: "success",
+            message: "please confirm your email address by clicking the link sent to your email"
+        })
+
+    }catch(err){
+        // if sending the email fails for some reason
+        newuser.confirmationToken = undefined
+        newuser.confirmationTokenExpires = undefined
+        newuser.active = false
+        //update the database
+        await user.save({validateBeforeSave: false})
+        return next(new appError('There was a problem sending your confirmation link. please try again'))
+    }
+})
+
+// confirm new user
+exports.confirmEmail = catchasync( async (req, res, next) => {
+    // encrypting the token sent to the email to compare with thhe confirmationToken in the database.
+    const hashedtoken = crypto.createHash('sha256').update(req.params.token).digest('hex')
+    const user = await userModel.findOne({
+        confirmationToken: hashedtoken,
+        confirmationTokenExpires: {$gt: Date.now()}
+    })
+    if(!user){
+        // removing the new user if their confirmation link has expired.
+        await userModel.deleteOne({confirmationToken: hashedtoken})
+        return next(new appError('Your confirmation link has expired. Try again'))
+    }
+    // activate the user as legit
+    user.confirmationToken = undefined
+    user.confirmationTokenExpires = undefined
+    // activate user
+    user.active = true,
+    // update the database
+    await user.save({validateBeforeSave: false})
+    // log in user
     // jwt token 
-    GenerateToken(newuser, 201, res)
+    GenerateToken(user, 201, res)
 })
 // logging user
 exports.login = catchasync( async (req, res, next) => {
+    // Accepting only the email and pssword from req.body As security measure
     const {email, password} = req.body
+    // check if the user has exceeded the maximum login attempts
+    const {loginAttempts} = req.session
+    if(loginAttempts > 10){
+        return res.status(409).json({
+            status: 'fail',
+            message: 'Too many login attempts. Try again later.'
+        })
+    }
     // check if email and password exist
     if(!email || !password) {
         return next(new appError('please provide A valid email and password !!') )
@@ -61,9 +121,11 @@ exports.login = catchasync( async (req, res, next) => {
     const user = await userModel.findOne({email}).select('+password')
     if(!user || !await user.comparePasswords(password, user.password)){
         // When handling authentication errors, it is generally considered good practice to return a generic error message such as "Incorrect username or password" instead of specifying which part of the authentication process failed (e.g. "Invalid username" or "Incorrect password").The main benefit of returning a generic error message is that it can help prevent potential security vulnerabilities. If an attacker is trying to gain unauthorized access to a system, they may use various techniques such as brute force attacks to guess a user's username and password. By returning a generic error message, you are not providing any additional information that could help the attacker narrow down their guesses. On the other hand, if you return a specific error message such as "Invalid username", the attacker now knows that the username they guessed was incorrect and can focus their efforts on guessing a different username.
+        req.session.loginAttempts = loginAttempts + 1
         return next(new appError('Incorrect email or password', 401))
     }
     // if everything is ok, send token
+    req.session.loginAttempts = 0
     GenerateToken(user, 200, res)
 })
 
@@ -102,13 +164,15 @@ exports.protect = catchasync(async ( req, res, next) => {
 
 exports.forgotPassword = catchasync( async (req, res, next) => {
     // check if user exists
+            // The user has signed up before But they forgot thier password.
     const user = await userModel.findOne({email: req.body.email})
-    if(!user) next(new appError('There is no user with thise email', 404))
+    if(!user) next(new appError('There is no user registered with this email, Please provide the correct email', 404))
     // generate A random reset token
     const resetToken = await user.ResetPasswordToken()
+            // returns a random resetToken and adds new properties passwordResetToken and passwordResetExpires
     // saving the encrypted request token and its expire date into our database
     await user.save({validateBeforeSave: false})
-    // reset url
+    // reset url to send email to the user
     const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`
     const message = `To create your new password: Go to this link ${resetUrl}`
     // If sending the email fails for some reason we have to unset the passwordResetToken and passwordResetExpires property of the user in the database. but we can't do this if we used the catchAsyc function. we need a new try catch block
@@ -118,6 +182,7 @@ exports.forgotPassword = catchasync( async (req, res, next) => {
             email: req.body.email,
             subject: 'Your password reset token',
             message
+            // we can insert an html code to be displayed for the user in the email
         })
         // sending response
         res.status(200).json({
@@ -126,17 +191,18 @@ exports.forgotPassword = catchasync( async (req, res, next) => {
         })
     }
     catch(err){
+        // If sending the email fails for some reason
         user.passwordResetToken = undefined
         user.passwordResetExpires = undefined
-        // to be persistant in the database
+        // updating the database
         await user.save({validateBeforeSave: false})
-        return next(new appError('There was an error sending the email. Try again later', 500))
+        return next(new appError('There was an error sending the email. Try again'))
     }
     
 })
 
 exports.resetPassword = catchasync( async (req, res, next) => {
-    // 1. Encrypting the unencrypted token that we sent on the url by email to compare with passwordResetToken property on the database to identify which user is to change thier password.
+    // 1. Encrypting the unencrypted token that we sent on the url by email to compare with passwordResetToken property on the database to identify if the user owns thier email they provided.
     const hashedtoken = crypto.createHash('sha256').update(req.params.token).digest('hex')
     // filter a user who's passwordResetToken property matches the token in the url and it's password has not expired.
     const user = await userModel.findOne({
@@ -144,14 +210,14 @@ exports.resetPassword = catchasync( async (req, res, next) => {
         passwordResetExpires: {$gt: Date.now()
         }
     })
-    if(!user) return next(new appError('Token has expired', 400))
-    // change the password 
+    if(!user) return next(new appError('It took you too long to change your password, Try again', 400))
+    // Accepting the new password from the form and changing it in the database.
     user.password = req.body.password
     user.passwordConfirm = req.body.passwordConfirm
     user.passwordResetToken = undefined
     user.passwordResetExpires = undefined
-    // persist changes in the database
-         // we want the validator to check if the password and passwordConfirm actually match
+    // update the database
+         // we want the validator to check if the password and passwordConfirm actually match in this case.
     await user.save() 
     // log in user
     GenerateToken(user, 200, res)
@@ -160,12 +226,14 @@ exports.resetPassword = catchasync( async (req, res, next) => {
 exports.updatePassword = catchasync( async (req, res, next) => {
     // 1. Get user from req.user 
     const user = await userModel.findById(req.user.id).select('+password')
-    // 2. compare current password with the original password
+    // 2. compare current password with the original 
+                // the user knows thier original password in this case and they want to change it.
     if(! await user.comparePasswords(req.body.currentPassword, user.password)) return next(new appError(`Current password doesn't macth the original password. try again !!`, 400))
     //3. update the password
     user.password = req.body.password
     user.passwordConfirm = req.body.passwordConfirm
     //4. update database
+            // We want the mongoose validator to check if password and passwordConfirm are the same.
     await user.save()
     // 5. log in user again
     GenerateToken(user, 200, res)
