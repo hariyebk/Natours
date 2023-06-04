@@ -243,7 +243,7 @@ exports.updatePassword = catchasync( async (req, res, next) => {
         // Not all logged in users should have equal previlage.
 exports.authorized = (req,res, next) => {
     // check if the user is admin or lead-guide
-    if(req.user.role !== 'admin' || req.user.role !== 'lead-guide'){
+    if(req.user.role !== 'admin'){
         return next(new appError(`You do not have the permission to perform this action`, 401))
     }
     next()

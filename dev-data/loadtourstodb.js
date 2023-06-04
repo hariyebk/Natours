@@ -18,7 +18,8 @@ mongoose.connect(db, {
 }).catch(error => {
     console.log(`couldn't connect to the remote database : ${err.message}`)
 })
-const tours = JSON.parse(fs.readFileSync(`${__dirname}/data/tours-sample.json`, 'utf-8'))
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/data/tours.json`, 'utf-8'))
+console.log('finished extarcting tours')
 const uploadtours = async () => {
     try{
         await Model.create(tours)
@@ -32,13 +33,12 @@ const uploadtours = async () => {
 const deletetours = async () => {
     try{
         await Model.deleteMany()
-        console.log('tours delted from the database')
+        console.log('tours deleted from the database')
     }
     catch(err){
         console.log(err.message)
     }
 }
-
 // process.argv : displays the path for the commands in the terminal.
 if(process.argv[2] === '--uploadtours') uploadtours()
 if(process.argv[2] === '--deletetours') deletetours()

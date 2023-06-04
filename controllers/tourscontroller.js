@@ -49,7 +49,8 @@ exports.createtour = catchAsync(async (req, res, next) => {
   });
 });
 exports.gettour = catchAsync(async (req, res, next) => {
-  const tour = await Model.findById(req.params.id);
+  // populate method embedes the referenced dataset into the parent dataset
+  const tour = await Model.findById(req.params.id).populate('guides')
   // if no tours were found by the ID
   if (!tour) {
     return next(new appError('No tour found with that ID', 404)); // and exits the function

@@ -42,7 +42,7 @@ const limiter = rateLimit({
 })
 app.use('/api', limiter)
 
-// Set up session middleware and store
+// Set up session middleware and store to limit maximum login attempts.
        // session-based login attempts tracking
 app.use(session({
     secret: process.env.JWT_SECRET,

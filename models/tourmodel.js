@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const slugify = require('slugify')
+const userModel = require('./usermodel')
 // const validator = require('validator')
 // Business logic how the data should be stored.
 
@@ -87,7 +88,39 @@ const schema = new mongoose.Schema({
     secretTour: {
         type: Boolean,
         default: false
+    },
+    startLocation: {
+        type:{
+            type: String,
+            default: 'Point',
+            enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+    },
+    // creating embeded dataset 
+    locations: [
+        {
+        type:{
+            type: String,
+            default: 'Point',
+            enum: ['Point']
+        },
+        coordinates: [Number],
+        address: String,
+        descritption: String,
+        day: Number
     }
+],
+    guides: [
+        {
+            type: mongoose.Schema.ObjectId,
+            // reference should the dataset collection name
+            ref: 'users',
+        }
+    ]
+
 }, {
     // each time the data is sent in json and object format, we are telling the schema to include the virtuals
     toJSON: {virtuals: true},
@@ -112,12 +145,22 @@ schema.virtual('plan').get(function(){
 // In Mongoose, middleware functions can be used to execute custom logic before or after certain events occur in the document lifecycle. These middleware functions can be very powerful and flexible, allowing you to add custom logic to your Mongoose schema and models at various points in the document lifecycle.
 // DOCUMENT MIDDLEWARE: runs only before the save() or create() commands.
         // pre hook
+
 schema.pre('save', function(next){
     // creates the slug field before the document is saved in the database.
     this.slug = slugify(this.name , {lower: true});
     next()
 }).post('save', function(doc,next){
 //     console.log(doc) // logs the document after it is saved.
+    next()
+})
+
+// finding the guides based on the id.
+schema.pre('save', async function(next){
+    // since the async function returns a promise, guidepromises is an array of promises
+    const guidepromises = this.guides.map(async id => await userModel.findById(id))
+    // run the promises at the same time with promise.all([])
+    this.guides = await Promise.all(guidepromises)
     next()
 })
 // QUERY MIDDLEWARE : runs before any query that starts with find (find, findOne,findMany)
