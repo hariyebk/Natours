@@ -12,7 +12,7 @@ router.post('/signup', authentication.signup)
 router.get('/confirmEmail/:token', authentication.confirmEmail)
 router.post('/login', authentication.login)
 router.post('/forgotPassword', authentication.forgotPassword)
-router.patch('/resetPassword/:token', authentication.resetPassword)
+router.patch('/resetPassword/:token',authentication.protect,authentication.resetPassword)
 router.patch('/updateMyPassword', authentication.protect ,authentication.updatePassword)
 // for user to update his data
 router

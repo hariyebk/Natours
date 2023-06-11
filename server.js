@@ -9,6 +9,7 @@ const dotenv = require('dotenv')
 //     console.log(err.name, err.message, err.stack)
 //     process.exit(1)
 // })
+//TODO: TODO: if the user sent an inavlid reset token. passwordReserToken and passwordResetTokenExpiers properties should be eliminated.
 dotenv.config({path: './config.env'}) // setting our enviroment variables into nodejs.
 const app = require('./app')
 const db = process.env.DATABSE_CONNECTION_STRING 

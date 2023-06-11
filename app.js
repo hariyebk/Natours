@@ -1,7 +1,8 @@
 const express = require('express');
-const toursrouter = require('./routes/toursRoutes')
 const morgan = require('morgan') // logger middleware
+const toursrouter = require('./routes/toursRoutes')
 const usersrouter = require('./routes/usersRoutes')
+const reviewrouter = require('./routes/reviewRoutes')
 const appError = require('./utils/appError')
 const globalErrorHandler = require('./controllers/errorHandler')
 const rateLimit = require('express-rate-limit')
@@ -87,6 +88,7 @@ app.use(session({
 // mounting the routers for sub paths
 app.use('/api/v1/tours', toursrouter)
 app.use('/api/v1/users', usersrouter)
+app.use('/api/v1/reviews', reviewrouter)
 
 // handling unhandled routes
         // only works if all the above middleware can't catch the request. so it means it's a wrong path.

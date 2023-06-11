@@ -38,7 +38,7 @@ const users = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/users.js
             runValidators: true
         })
         // send response
-        res.status(200).json({
+        res.status(201).json({
             status: "success",
             data: {
                 updatedUser

@@ -116,7 +116,7 @@ const schema = new mongoose.Schema({
     guides: [
         {
             type: mongoose.Schema.ObjectId,
-            // reference should the dataset collection name
+            // reference should be the dataset collection name
             ref: 'users',
         }
     ]
@@ -156,19 +156,28 @@ schema.pre('save', function(next){
 })
 
 // finding the guides based on the id.
-schema.pre('save', async function(next){
-    // since the async function returns a promise, guidepromises is an array of promises
-    const guidepromises = this.guides.map(async id => await userModel.findById(id))
-    // run the promises at the same time with promise.all([])
-    this.guides = await Promise.all(guidepromises)
-    next()
-})
+// schema.pre('save', async function(next){
+//     // since the async function returns a promise, guidepromises is an array of promises
+//     const guidepromises = this.guides.map(async id => await userModel.findById(id))
+//     // run the promises at the same time with promise.all([])
+//     this.guides = await Promise.all(guidepromises)
+//     next()
+// })
 // QUERY MIDDLEWARE : runs before any query that starts with find (find, findOne,findMany)
 schema.pre(/^find/, function(next){
     // It has access to the query object.
        // hiding the secret tours so that the public can't see them.
     this.find({secretTour: {$ne: true}})
     next() // passes the filtered query object.
+})
+// populating the child refrence with the actual guide data
+schema.pre(/^find/g, function(next){
+    // using populate method reduces performance because it uses find query behind the scences.
+    this.populate({
+        path: "guides",
+        select: ['-__v -passwordChangedAt']
+    })
+    next()
 })
 // AGGREGATION MIDDLEWARE : runs before the aggregate command
 schema.pre('aggregate', function(next){

@@ -4,20 +4,34 @@ const authcontroller = require('../controllers/authcontroller')
 // creating a router object that handroutehandlers.les different routes.
 const router = express.Router();
 // router.param('id', routehandlers.idchecker);
-// tour routes.
-router.route('/stats').get(routehandlers.gettoursstats);
-router.route('/monthly-plan/:year?').get(routehandlers.getMonthlyPlan);
+
+// tour stats
 router
-  .route('/top-5-tours')
-  .get(routehandlers.toptouralias, routehandlers.getalltours);
+.route('/stats')
+.get(routehandlers.gettoursstats);
+// tours per year
 router
-  .route('/5-most-cheap-tours')
-  .get(routehandlers.mostcheapalias, routehandlers.getalltours);
-router.route('/').get(routehandlers.getalltours).post(routehandlers.createtour); // chaining middlewares.
+.route('/monthly-plan/:year?')
+.get(routehandlers.getMonthlyPlan);
+// top rated tours
 router
-  .route('/:id?')
-  .get(routehandlers.gettour)
-  .patch(authcontroller.protect, authcontroller.authorized, routehandlers.updatetour)
-  .delete(authcontroller.protect, authcontroller.authorized, routehandlers.deltetour); // for special requests.
+.route('/top-5-tours')
+.get(routehandlers.toptouralias, routehandlers.getalltours);
+// the most cheap tours
+router
+.route('/5-most-cheap-tours')
+.get(routehandlers.mostcheapalias, routehandlers.getalltours);
+// create and get tours
+router
+.route('/')
+.get(routehandlers.getalltours)
+.post(routehandlers.createtour); // chaining middlewares.
+
+// update, delete and get specific tours
+router
+.route('/:id?')
+.get(authcontroller.protect, routehandlers.gettour)
+.patch(authcontroller.protect, authcontroller.authorized('admin, lead-guide'), routehandlers.updatetour)
+.delete(authcontroller.protect, authcontroller.authorized('admin'), routehandlers.deltetour); // for special requests.
 module.exports = router;
 // authcontroller.protect, authcontroller.authorized('admin', 'lead-guide'),

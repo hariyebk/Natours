@@ -81,6 +81,7 @@ exports.signup = catchasync( async (req, res, next) => {
 exports.confirmEmail = catchasync( async (req, res, next) => {
     // encrypting the token sent to the email to compare with thhe confirmationToken in the database.
     const hashedtoken = crypto.createHash('sha256').update(req.params.token).digest('hex')
+    // check if the confirmation link has not expired
     const user = await userModel.findOne({
         confirmationToken: hashedtoken,
         confirmationTokenExpires: {$gt: Date.now()}
@@ -121,6 +122,8 @@ exports.login = catchasync( async (req, res, next) => {
     const user = await userModel.findOne({email}).select('+password')
     if(!user || !await user.comparePasswords(password, user.password)){
         // When handling authentication errors, it is generally considered good practice to return a generic error message such as "Incorrect username or password" instead of specifying which part of the authentication process failed (e.g. "Invalid username" or "Incorrect password").The main benefit of returning a generic error message is that it can help prevent potential security vulnerabilities. If an attacker is trying to gain unauthorized access to a system, they may use various techniques such as brute force attacks to guess a user's username and password. By returning a generic error message, you are not providing any additional information that could help the attacker narrow down their guesses. On the other hand, if you return a specific error message such as "Invalid username", the attacker now knows that the username they guessed was incorrect and can focus their efforts on guessing a different username.
+
+        // increase the login attempt by one because the user has failed to log in.
         req.session.loginAttempts = loginAttempts + 1
         return next(new appError('Incorrect email or password', 401))
     }
@@ -131,6 +134,7 @@ exports.login = catchasync( async (req, res, next) => {
 
 // verifing logged in users for protected routes
 exports.protect = catchasync(async ( req, res, next) => {
+    // everytime the user vists some route , he should send his jsonwebtoken within the request object. then we make sure that the user exists in our database.
     let token
     //1. check if token exits within the request
         if(
@@ -150,13 +154,12 @@ exports.protect = catchasync(async ( req, res, next) => {
         
     //3. check if user still exits (if account is not deleted or token's payload is not changed by a 3rd party)
     const currentuser = await userModel.findById(decoded.id)
-    if(!currentuser) next(new appError('User not found. Make sure you have an active account', 401))
+    if(!currentuser) next(new appError('User not found. Try to login again', 401))
 
     //4. check if the user has chaged their password after the token has been issued.
     if(await currentuser.checkIfPasswordChanged(decoded.iat)){
         next(new appError('Password has been changed, Try to login agian'))
     }
-    
     // finally grant access to protected route by passing the user for the next middleware
     req.user = currentuser
     next()
@@ -210,7 +213,11 @@ exports.resetPassword = catchasync( async (req, res, next) => {
         passwordResetExpires: {$gt: Date.now()
         }
     })
-    if(!user) return next(new appError('It took you too long to change your password, Try again', 400))
+    if(!user){
+        req.user.passwordResetToken = undefined
+        req.user.passwordResetExpires = undefined
+        return next(new appError('It took you too long to change your password, Try again', 400))
+    }
     // Accepting the new password from the form and changing it in the database.
     user.password = req.body.password
     user.passwordConfirm = req.body.passwordConfirm
@@ -241,10 +248,10 @@ exports.updatePassword = catchasync( async (req, res, next) => {
 
 //Authorization process
         // Not all logged in users should have equal previlage.
-exports.authorized = (req,res, next) => {
-    // check if the user is admin or lead-guide
-    if(req.user.role !== 'admin'){
-        return next(new appError(`You do not have the permission to perform this action`, 401))
+exports.authorized = ( ...roles) => {
+    return (req, res, next) => {
+        // check if the user is admin or lead-guide
+        if(!roles.includes(req.user.role)) return next(new appError(`You do not have the permission to perform this action`, 403))
+        next()
     }
-    next()
 }
