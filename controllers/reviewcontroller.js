@@ -2,10 +2,13 @@ const reviewModel = require('../models/reviewmodel')
 const catchAsync = require('../utils/catchAsyncErrors')
 const appError = require('../utils/appError')
 
+
 exports.postreview = catchAsync( async (req, res, next) => {
+    if(!req.body.author) req.body.author = req.user.id
+    if(!req.user.tour) req.body.tour = req.params.TourId
     const review = await reviewModel.create(req.body)
-    // check if current user and reviews author id matches
-    if(review.author[0] != req.user.id) return next(new appError(`Author's Id doesn't match with the current user`, 400))
+    // // check if current user and reviews author id matches
+    // if(review.author[0] != req.user.id) return next(new appError(`Author's Id doesn't match with the current user`, 400))
     res.status(201).json({
         status: "success",
         data: {
@@ -13,8 +16,13 @@ exports.postreview = catchAsync( async (req, res, next) => {
         }
     })
 })
-exports.getallreviews = catchAsync( async (req, res, next) => {
-    const reviews = await reviewModel.find()
+exports.getreviews = catchAsync( async (req, res, next) => {
+    let filter = {}
+    if(req.params.TourId) filter = {tour: req.params.TourId}
+    // if the tour Id exists within the url , we display all the reviews for that tour
+    // if the tour Id doesn't exist within the url, we display all reviews for all tours.
+    console.log(req.params)
+    const reviews = await reviewModel.find(filter)
     res.status(200).json({
         status: "success",
         results: reviews.length,
@@ -23,17 +31,17 @@ exports.getallreviews = catchAsync( async (req, res, next) => {
         }
     })
 })
-exports.getreview = catchAsync( async (req, res, next) => {
-    const review = await reviewModel.findById(req.params.id)
-    if(!review) return next(new appError('No review found with this Id', 404))
-    res.status(200).json({
-        status: 'success',
-        data: {
-            review
-        }
-    })
+// exports.getreview = catchAsync( async (req, res, next) => {
+//     const review = await reviewModel.findById(req.params.id)
+//     if(!review) return next(new appError('No review found with this Id', 404))
+//     res.status(200).json({
+//         status: 'success',
+//         data: {
+//             review
+//         }
+//     })
 
-})
+// })
 exports.updatereview = catchAsync( async (req, res, next) =>{
     const review = await reviewModel.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
