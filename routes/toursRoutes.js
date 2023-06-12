@@ -35,6 +35,6 @@ router
 .route('/:id?')
 .get(authcontroller.protect, routehandlers.gettour)
 .patch(authcontroller.protect, authcontroller.authorized('admin, lead-guide'), routehandlers.updatetour)
-.delete(authcontroller.protect, authcontroller.authorized('admin'), routehandlers.deltetour); // for special requests.
+.delete(authcontroller.protect, authcontroller.authorized('admin'), routehandlers.deletetour); // for special requests.
 module.exports = router;
 // authcontroller.protect, authcontroller.authorized('admin', 'lead-guide'),

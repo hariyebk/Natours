@@ -2,6 +2,7 @@ const Model = require('../models/tourmodel');
 const apiFeatures = require('../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsyncErrors');
 const appError = require('../utils/appError');
+const handlers = require('./handlerFactory')
 // a middleware(param) inside another middleware(param) that check for the right id
 
 // middleware for aliases
@@ -76,14 +77,7 @@ exports.updatetour = catchAsync(async (req, res, next) => {
     },
   });
 });
-exports.deltetour = catchAsync(async (req, res, next) => {
-  const tour = await Model.findByIdAndDelete(req.params.id);
-  // if no tours were found by the ID
-  if (!tour) return next(new appError('No tour found with that ID', 404)); // and exits the function
-  res.status(204).json({
-    status: 'success',
-  });
-});
+exports.deletetour = handlers.deleteOne(Model)
 // aggregation pipeline for stats
 exports.gettoursstats = catchAsync(async (req, res, next) => {
   // aggregation pipeline

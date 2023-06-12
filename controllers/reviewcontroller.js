@@ -1,7 +1,7 @@
 const reviewModel = require('../models/reviewmodel')
 const catchAsync = require('../utils/catchAsyncErrors')
 const appError = require('../utils/appError')
-
+const handlers = require('./handlerFactory')
 
 exports.postreview = catchAsync( async (req, res, next) => {
     if(!req.body.author) req.body.author = req.user.id
@@ -21,7 +21,6 @@ exports.getreviews = catchAsync( async (req, res, next) => {
     if(req.params.TourId) filter = {tour: req.params.TourId}
     // if the tour Id exists within the url , we display all the reviews for that tour
     // if the tour Id doesn't exist within the url, we display all reviews for all tours.
-    console.log(req.params)
     const reviews = await reviewModel.find(filter)
     res.status(200).json({
         status: "success",
@@ -55,13 +54,8 @@ exports.updatereview = catchAsync( async (req, res, next) =>{
         }
     })
 })
-exports.deletereview = catchAsync( async (req, res, next) => {
-    const review = await reviewModel.findByIdAndDelete(req.params.id)
-    if(!review) return next(new appError('No review found with this Id', 404))
-    res.status(204).json({
-        status: "success"
-    })
-})
+exports.deletereview = handlers.deleteOne(reviewModel)
+
 exports.deleteallreviews = catchAsync( async (req, res, next) => {
     await reviewModel.deleteMany()
     res.status(204).json({

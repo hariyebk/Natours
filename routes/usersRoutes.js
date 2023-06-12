@@ -24,13 +24,13 @@ router
     // get all users
 router
 .route('/')
-.get(authentication.protect, routehandlers.getallusers)
+.get(authentication.protect, authentication.authorized('admin', 'lead-guide'), routehandlers.getallusers)
 
 router
-.route('/:name?')
+.route('/:id?')
 // get user
 .get(routehandlers.getuser)
 // delete user
-.delete(routehandlers.deleteuser);
+.delete(authentication.protect, authentication.authorized('admin'), routehandlers.deleteuser);
 
 module.exports = router;
