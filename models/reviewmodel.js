@@ -14,10 +14,11 @@ const reviewSchema  = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    // parent referencing
     tour: {
         type: mongoose.Schema.ObjectId,
         ref: 'tours',
-        required: [true, 'A review must have an Tour']
+        required: [true, "A review must have a Tour "]
     },
     author: {
         type: mongoose.Schema.ObjectId,
@@ -35,15 +36,14 @@ const reviewSchema  = new mongoose.Schema({
 
 // populating refrences with actual data
 reviewSchema.pre(/^find/, function(next){
+    // A chain of populates reduces performance. that why we don't populate reviews with tours.
     this.populate({
-        path: 'author',
-        select: 'name'
-    }).populate({
         path: "author",
         select: 'name'
     })
     next()
 })
+// A chain of populates reduces performance
 
 const reviewModel = mongoose.model('reviews', reviewSchema)
 // export the model

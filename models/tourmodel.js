@@ -113,6 +113,7 @@ const schema = new mongoose.Schema({
         day: Number
     }
 ],
+    // child referencing
     guides: [
         {
             type: mongoose.Schema.ObjectId,
@@ -126,7 +127,7 @@ const schema = new mongoose.Schema({
     toJSON: {virtuals: true},
     toObject: {virtuals: true}
 })
-// Virtual properties provide additional fields that doesn't need to be stored in the databse. 
+// Virtual fields provide additional fields that doesn't need to be stored in the databse. 
 schema.virtual('durationWeeks').get(function(){
     // setting the value for the field
     return this.duration / 7
@@ -141,6 +142,15 @@ schema.virtual('plan').get(function(){
     if(+this.price > 2000){
         return 'premium'
     }
+})
+// virtual populate: replacing the references with the actual data without persisting into the database.
+schema.virtual('reviews', {
+    ref: 'reviews',
+    // forignField is the field name that refers the current model in reviews model
+    foreignField: 'tour',
+    // localField is the mongoose ObjectId for the current model
+    localField: '_id'
+
 })
 // In Mongoose, middleware functions can be used to execute custom logic before or after certain events occur in the document lifecycle. These middleware functions can be very powerful and flexible, allowing you to add custom logic to your Mongoose schema and models at various points in the document lifecycle.
 // DOCUMENT MIDDLEWARE: runs only before the save() or create() commands.
