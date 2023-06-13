@@ -1,1 +1,1 @@
-currently working on authentication, authorization and security
+currently Data Modeling and Advanced Mongoose
