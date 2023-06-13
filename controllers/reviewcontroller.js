@@ -3,19 +3,13 @@ const catchAsync = require('../utils/catchAsyncErrors')
 const appError = require('../utils/appError')
 const handlers = require('./handlerFactory')
 
-exports.postreview = catchAsync( async (req, res, next) => {
+exports.setIdandTour = (req,res,next) => {
     if(!req.body.author) req.body.author = req.user.id
-    if(!req.user.tour) req.body.tour = req.params.TourId
-    const review = await reviewModel.create(req.body)
-    // // check if current user and reviews author id matches
-    // if(review.author[0] != req.user.id) return next(new appError(`Author's Id doesn't match with the current user`, 400))
-    res.status(201).json({
-        status: "success",
-        data: {
-            review
-        }
-    })
-})
+    if(!req.body.tour) req.body.tour = req.params.TourId
+    console.log(req.body.author)
+    console.log(req.body.tour)
+    next()
+}
 exports.getreviews = catchAsync( async (req, res, next) => {
     let filter = {}
     if(req.params.TourId) filter = {tour: req.params.TourId}
@@ -41,21 +35,10 @@ exports.getreviews = catchAsync( async (req, res, next) => {
 //     })
 
 // })
-exports.updatereview = catchAsync( async (req, res, next) =>{
-    const review = await reviewModel.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true
-    })
-    if(!review) return next(new appError('No review found with this Id', 404))
-    res.status(201).json({
-        status: "success",
-        data: {
-            review
-        }
-    })
-})
-exports.deletereview = handlers.deleteOne(reviewModel)
-
+exports.postreview = handlers.createdoc(reviewModel)
+exports.updatereview = handlers.updatedoc(reviewModel)
+exports.deletereview = handlers.deletedoc(reviewModel)
+exports.getreview = handlers.finddoc(reviewModel)
 exports.deleteallreviews = catchAsync( async (req, res, next) => {
     await reviewModel.deleteMany()
     res.status(204).json({

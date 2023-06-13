@@ -119,7 +119,7 @@ exports.login = catchasync( async (req, res, next) => {
         return next(new appError('please provide A valid email and password !!') )
     }
     // check if the user exists and the password is correct
-    const user = await userModel.findOne({email}).select('+password')
+    const user = await userModel.findOne({email}).select('+password').select('+active')
     if(!user || !await user.comparePasswords(password, user.password)){
         // When handling authentication errors, it is generally considered good practice to return a generic error message such as "Incorrect username or password" instead of specifying which part of the authentication process failed (e.g. "Invalid username" or "Incorrect password").The main benefit of returning a generic error message is that it can help prevent potential security vulnerabilities. If an attacker is trying to gain unauthorized access to a system, they may use various techniques such as brute force attacks to guess a user's username and password. By returning a generic error message, you are not providing any additional information that could help the attacker narrow down their guesses. On the other hand, if you return a specific error message such as "Invalid username", the attacker now knows that the username they guessed was incorrect and can focus their efforts on guessing a different username.
 
@@ -127,6 +127,7 @@ exports.login = catchasync( async (req, res, next) => {
         req.session.loginAttempts = loginAttempts + 1
         return next(new appError('Incorrect email or password', 401))
     }
+    if(user.active === false) return next(new appError('This user has been deleted'))
     // if everything is ok, send token
     req.session.loginAttempts = 0
     GenerateToken(user, 200, res)
@@ -154,7 +155,7 @@ exports.protect = catchasync(async ( req, res, next) => {
         
     //3. check if user still exits (if account is not deleted or token's payload is not changed by a 3rd party)
     const currentuser = await userModel.findById(decoded.id)
-    if(!currentuser) next(new appError('User not found. Try to login again', 401))
+    if(!currentuser) next(new appError('User not found.', 401))
 
     //4. check if the user has chaged their password after the token has been issued.
     if(await currentuser.checkIfPasswordChanged(decoded.iat)){

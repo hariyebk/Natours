@@ -39,45 +39,10 @@ exports.getalltours = catchAsync(async (req, res, next) => {
     },
   });
 });
-exports.createtour = catchAsync(async (req, res, next) => {
-  // easy way for creating and uploading documents in our remote database.
-  const doc = await Model.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tour: doc,
-    },
-  });
-});
-exports.gettour = catchAsync(async (req, res, next) => {
-  // populate method embedes the referenced dataset into the parent dataset
-  const tour = await Model.findById(req.params.id).populate('reviews')
-  // if no tours were found by the ID
-  if (!tour) {
-    return next(new appError('No tour found with that ID', 404)); // and exits the function
-  }
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-});
-exports.updatetour = catchAsync(async (req, res, next) => {
-  const tour = await Model.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-  // if no tours were found by the ID
-  if (!tour) return next(new appError('No tour found with that ID', 404)); // and exits the function
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-});
-exports.deletetour = handlers.deleteOne(Model)
+exports.createtour = handlers.createdoc(Model)
+exports.updatetour = handlers.updatedoc(Model)
+exports.deletetour = handlers.deletedoc(Model)
+exports.gettour = handlers.finddoc(Model)
 // aggregation pipeline for stats
 exports.gettoursstats = catchAsync(async (req, res, next) => {
   // aggregation pipeline

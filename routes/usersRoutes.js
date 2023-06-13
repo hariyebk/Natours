@@ -29,7 +29,9 @@ router
 router
 .route('/:id?')
 // get user
-.get(routehandlers.getuser)
+.get(authentication.protect, routehandlers.getuser)
+// update user
+.patch(authentication.protect, authentication.authorized('admin'), routehandlers.updateuser)
 // delete user
 .delete(authentication.protect, authentication.authorized('admin'), routehandlers.deleteuser);
 
