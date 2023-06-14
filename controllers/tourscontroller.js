@@ -1,7 +1,5 @@
 const Model = require('../models/tourmodel');
-const apiFeatures = require('../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsyncErrors');
-const appError = require('../utils/appError');
 const handlers = require('./handlerFactory')
 // a middleware(param) inside another middleware(param) that check for the right id
 
@@ -20,29 +18,11 @@ exports.toptouralias = (req, res, next) => {
 };
 // route handlers should not deal with duplicate way of handling errors with try catch blocks. so lets delegate a function for it
 // route handlers for tours
-exports.getalltours = catchAsync(async (req, res, next) => {
-  // handles all kinds of queries (filtering, sorting,pagination)
-  const features = new apiFeatures(Model.find(), req.query)
-    .filter()
-    .sort()
-    .limit()
-    .page();
-  const tours = await features.queryObj;
-  // the argument that we should pass to the Model.find() should the same query as
-  // route handler
-  // enveloping our data for security measures. jsend
-  res.status(200).json({
-    status: 'success',
-    results: tours.length,
-    data: {
-      tours,
-    },
-  });
-});
+exports.getalltours = handlers.findalldoc(Model)
 exports.createtour = handlers.createdoc(Model)
 exports.updatetour = handlers.updatedoc(Model)
 exports.deletetour = handlers.deletedoc(Model)
-exports.gettour = handlers.finddoc(Model)
+exports.gettour = handlers.finddoc(Model, {path: 'reviews'})
 // aggregation pipeline for stats
 exports.gettoursstats = catchAsync(async (req, res, next) => {
   // aggregation pipeline

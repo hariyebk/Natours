@@ -27,8 +27,8 @@ router
 // create and get tours
 router
 .route('/')
-.get(routehandlers.getalltours)
-.post(routehandlers.createtour); // chaining middlewares.
+.get(authcontroller.protect, routehandlers.getalltours)
+.post(authcontroller.protect, authcontroller.authorized('admin','lead-guide'), routehandlers.createtour); // chaining middlewares.
 
 // update, delete and get specific tours
 router

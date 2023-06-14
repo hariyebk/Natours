@@ -5,16 +5,7 @@ const appError = require('../utils/appError')
 const handlers = require('./handlerFactory')
 
 //  route handlers for user resources.
-exports.getallusers = catchAsync( async (req, res, next) => {
-        const users = await userModel.find()
-        res.status(200).json({
-            "status": "success",
-            "results": users.length,
-            "data": {
-                users
-            }
-    })
-})
+exports.getallusers = handlers.findalldoc(userModel)
 exports.getuser = handlers.finddoc(userModel)
 exports.deleteuser = handlers.deletedoc(userModel)
 exports.updateuser = handlers.updatedoc(userModel)

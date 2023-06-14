@@ -8,7 +8,7 @@ router
 .route('/')
 .post(authcontroller.protect, authcontroller.authorized('user'), routehandlers.setIdandTour, routehandlers.postreview)
 .get(authcontroller.protect, routehandlers.getreviews)
-.delete(routehandlers.deleteallreviews)
+.delete(authcontroller.protect, authcontroller.authorized('admin'), routehandlers.deleteallreviews)
 
 // update, delete and get specific reviews
 router

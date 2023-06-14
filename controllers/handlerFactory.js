@@ -1,6 +1,6 @@
 const catchAsync = require('../utils/catchAsyncErrors')
 const appError= require('../utils/appError')
-
+const apiFeatures = require('../utils/apiFeatures');
 // Refactor
     // The fucntion after the arrow is returned implicitly
 exports.deletedoc = Model => catchAsync(async (req, res, next) => {
@@ -31,11 +31,31 @@ exports.updatedoc = Model => catchAsync(async (req, res, next) => {
     data: doc
     });
 });
-exports.finddoc = Model => catchAsync( async (req, res, next) => {
-    const doc = await Model.findById(req.params.id)
+exports.finddoc = (Model, populate) => catchAsync( async (req, res, next) => {
+    let query = Model.findById(req.params.id) // return a promise
+    if(populate) query = query.populate(populate)
+    const doc = await query 
     if(!doc) return next(new appError('No document found with this id', 404))
     res.status(200).json({
         status: "success",
         data: doc
     })
 })
+exports.findalldoc = Model => catchAsync(async (req, res, next) => {
+    let filter = {}
+    if(req.params.TourId) filter = {tour: req.params.TourId}
+    // if the tour Id exists within the url , we display all the reviews for that tour
+    // if the tour Id doesn't exist within the url, filetr will bw empty object which means all documents will be displayed
+    // handles all kinds of queries (filtering, sorting,pagination)
+    const features = new apiFeatures(Model.find(filter), req.query)
+        .filter()
+        .sort()
+        .limit()
+        .page();
+    const doc = await features.queryObj;
+        res.status(200).json({
+        status: 'success',
+        results: doc.length,
+        data: doc
+    });
+});
