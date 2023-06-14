@@ -3,19 +3,20 @@ const authcontroller = require('../controllers/authcontroller')
 const routehandlers = require('../controllers/reviewcontroller')
 // child router: can access routes from the parent router
 const router = express.Router({mergeParams: true})
+router.use(authcontroller.protect)
 // post and get reviews
 router
 .route('/')
-.post(authcontroller.protect, authcontroller.authorized('user'), routehandlers.setIdandTour, routehandlers.postreview)
-.get(authcontroller.protect, routehandlers.getreviews)
-.delete(authcontroller.protect, authcontroller.authorized('admin'), routehandlers.deleteallreviews)
+.post(authcontroller.authorized('user'), routehandlers.setIdandTour, routehandlers.postreview)
+.get(routehandlers.getreviews)
+.delete(authcontroller.authorized('admin'), routehandlers.deleteallreviews)
 
 // update, delete and get specific reviews
 router
 .route('/:id')
-.get(authcontroller.protect, routehandlers.getreview)
-.patch(authcontroller.protect, authcontroller.authorized('user'), routehandlers.updatereview)
-.delete(authcontroller.protect, authcontroller.authorized('user'), routehandlers.deletereview)
+.get(routehandlers.getreview)
+.patch(authcontroller.authorized('user', 'admin'), routehandlers.updatereview)
+.delete(authcontroller.authorized('user', 'admin'), routehandlers.deletereview)
 
 module.exports = router
 

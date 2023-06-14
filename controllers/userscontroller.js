@@ -36,3 +36,7 @@ exports.deleteMe = catchAsync( async (req, res, next) => {
             message: null
     })
 })
+exports.getme = (req, res, next) => {
+    req.params.id = req.user.id
+    next()
+}

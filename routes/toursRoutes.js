@@ -15,7 +15,7 @@ router
 // tours per year
 router
 .route('/monthly-plan/:year?')
-.get(routehandlers.getMonthlyPlan);
+.get(authcontroller.protect, authcontroller.authorized('admin', 'lead-guide', 'guide'), routehandlers.getMonthlyPlan);
 // top rated tours
 router
 .route('/top-5-tours')
@@ -27,14 +27,14 @@ router
 // create and get tours
 router
 .route('/')
-.get(authcontroller.protect, routehandlers.getalltours)
+.get(routehandlers.getalltours) // if other websites want to use our api
 .post(authcontroller.protect, authcontroller.authorized('admin','lead-guide'), routehandlers.createtour); // chaining middlewares.
 
 // update, delete and get specific tours
 router
 .route('/:id?')
-.get(authcontroller.protect, routehandlers.gettour)
+.get(routehandlers.gettour) // anyone can access our api
 .patch(authcontroller.protect, authcontroller.authorized('admin', 'lead-guide'), routehandlers.updatetour)
-.delete(authcontroller.protect, authcontroller.authorized('admin'), routehandlers.deletetour); // for special requests.
+.delete(authcontroller.protect, authcontroller.authorized('admin', 'lead-guide'), routehandlers.deletetour); // for special requests.
 module.exports = router;
 // authcontroller.protect, authcontroller.authorized('admin', 'lead-guide'),

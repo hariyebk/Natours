@@ -12,27 +12,36 @@ router.post('/signup', authentication.signup)
 router.get('/confirmEmail/:token', authentication.confirmEmail)
 router.post('/login', authentication.login)
 router.post('/forgotPassword', authentication.forgotPassword)
-router.patch('/resetPassword/:token',authentication.protect,authentication.resetPassword)
-router.patch('/updateMyPassword', authentication.protect ,authentication.updatePassword)
+router.patch('/resetPassword/:token', authentication.resetPassword)
+
+// since middlewares run based on order. all endpoints that come next will be secured.
+router.use(authentication.protect)
+
+router.patch('/updateMyPassword', authentication.updatePassword)
 // for user to update his data
 router
-.patch('/updateMe', authentication.protect, routehandlers.updateMe)
+.patch('/updateMe', routehandlers.updateMe)
 // for user to Inactivate his account
 router
-.delete('/deleteMe', authentication.protect, routehandlers.deleteMe)
+.delete('/deleteMe', routehandlers.deleteMe)
+// for user to see his/her data
+router
+.get('/me', routehandlers.getme, routehandlers.getuser)
 //  For system administrator, to get data about users.
-    // get all users
+
+router.use(authentication.authorized('admin', 'lead-guide'))
+// get all users
 router
 .route('/')
-.get(authentication.protect, authentication.authorized('admin', 'lead-guide'), routehandlers.getallusers)
+.get(routehandlers.getallusers)
 
 router
 .route('/:id?')
 // get user
-.get(authentication.protect, routehandlers.getuser)
+.get(routehandlers.getuser)
 // update user
-.patch(authentication.protect, authentication.authorized('admin'), routehandlers.updateuser)
+.patch(routehandlers.updateuser)
 // delete user
-.delete(authentication.protect, authentication.authorized('admin'), routehandlers.deleteuser);
+.delete(routehandlers.deleteuser);
 
 module.exports = router;
