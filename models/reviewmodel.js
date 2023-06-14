@@ -21,7 +21,7 @@ const reviewSchema  = new mongoose.Schema({
         ref: 'tours',
         required: [true, "A review must have a Tour "]
     },
-    author: {
+    user: {
         type: mongoose.Schema.ObjectId,
         ref: 'users',
         required: [true, 'A review must have an author']
@@ -39,7 +39,7 @@ const reviewSchema  = new mongoose.Schema({
 reviewSchema.pre(/^find/, function(next){
     // A chain of populates reduces performance. that why we don't populate reviews with tours.
     this.populate({
-        path: "author",
+        path: "user",
         select: 'name'
     })
     next()
