@@ -37,6 +37,7 @@ exports.gettoursstats = catchAsync(async (req, res, next) => {
       $group: {
         // based on what field we want to group.
         _id: { $toUpper: '$difficulty' },
+         // feilds to be returned
         numTours: { $sum: 1 },
         numRatings: { $sum: '$ratingQuantity' },
         avgRating: { $avg: '$ratingAvarage' },

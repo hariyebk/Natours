@@ -127,6 +127,13 @@ const schema = new mongoose.Schema({
     toJSON: {virtuals: true},
     toObject: {virtuals: true}
 })
+
+// Indexes are an important tool for improving read performance as they allow the database to quickly locate relevant documents without having to scan the entire collection.1. Identify frequently queried fields: Start by identifying the fields that are frequently queried in your application. 2. Use compound indexes: If your queries involve multiple fields, consider using compound indexes that include all the relevant fields. This can improve query performance by allowing the database to quickly locate documents that match all the specified criteria. 3. Avoid indexing large fields: Avoid indexing large fields like text or binary data, as this can increase index size and slow down query performance. 5. Be cautious with unique indexes: While unique indexes can help enforce data integrity, they can also slow down write performance.
+
+// compound indexes
+schema.index({price: 1, ratingAvarage: -1})
+// single index
+schema.index({slug: 1})
 // Virtual fields provide additional fields that doesn't need to be stored in the databse. 
 schema.virtual('durationWeeks').get(function(){
     // setting the value for the field

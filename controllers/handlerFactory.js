@@ -52,7 +52,9 @@ exports.findalldoc = Model => catchAsync(async (req, res, next) => {
         .sort()
         .limit()
         .page();
-    const doc = await features.queryObj;
+        // query statics
+    // const doc = await features.queryObj.explain();
+    const doc = await features.queryObj
         res.status(200).json({
         status: 'success',
         results: doc.length,

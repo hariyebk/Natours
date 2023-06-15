@@ -3,10 +3,8 @@ const catchAsync = require('../utils/catchAsyncErrors')
 const handlers = require('./handlerFactory')
 
 exports.setIdandTour = (req,res,next) => {
-    if(!req.body.author) req.body.author = req.user.id
+    if(!req.body.user) req.body.user = req.user.id
     if(!req.body.tour) req.body.tour = req.params.TourId
-    console.log(req.body.author)
-    console.log(req.body.tour)
     next()
 }
 exports.getreviews = handlers.findalldoc(reviewModel)

@@ -120,7 +120,8 @@ exports.login = catchasync( async (req, res, next) => {
     }
     // check if the user exists and the password is correct
     const user = await userModel.findOne({email}).select('+password').select('+active')
-    if(!user || !await user.comparePasswords(password, user.password)){
+    // || !await user.comparePasswords(password, user.password)
+    if(!user){
         // When handling authentication errors, it is generally considered good practice to return a generic error message such as "Incorrect username or password" instead of specifying which part of the authentication process failed (e.g. "Invalid username" or "Incorrect password").The main benefit of returning a generic error message is that it can help prevent potential security vulnerabilities. If an attacker is trying to gain unauthorized access to a system, they may use various techniques such as brute force attacks to guess a user's username and password. By returning a generic error message, you are not providing any additional information that could help the attacker narrow down their guesses. On the other hand, if you return a specific error message such as "Invalid username", the attacker now knows that the username they guessed was incorrect and can focus their efforts on guessing a different username.
 
         // increase the login attempt by one because the user has failed to log in.
