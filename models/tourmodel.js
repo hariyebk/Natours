@@ -42,7 +42,8 @@ const schema = new mongoose.Schema({
         default: 4.5,
         // Builtin data validator
         min: [1, `A rating should be above 1.0`],
-        max: [5, `A rating should be below 5.0`]
+        max: [5, `A rating should be below 5.0`],
+        set: val => Math.round(val * 10) / 10
     },
     ratingQuantity: {
         type: Number,
@@ -89,6 +90,7 @@ const schema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    // GeoJSON object
     startLocation: {
         type:{
             type: String,
@@ -134,6 +136,8 @@ const schema = new mongoose.Schema({
 schema.index({price: 1, ratingAvarage: -1})
 // single index
 schema.index({slug: 1})
+// geospatial index
+schema.index({startLocation: '2dsphere'})
 // Virtual fields provide additional fields that doesn't need to be stored in the databse. 
 schema.virtual('durationWeeks').get(function(){
     // setting the value for the field
@@ -197,11 +201,11 @@ schema.pre(/^find/g, function(next){
     next()
 })
 // AGGREGATION MIDDLEWARE : runs before the aggregate command
-schema.pre('aggregate', function(next){
-    // adding a stage in the pipeline that hides secret tours
-    this.pipeline().unshift({$match : {secretTour: {$ne: true}}})
-    next()
-})
+// schema.pre('aggregate', function(next){
+//     // adding a stage in the pipeline that hides secret tours
+//     this.pipeline().unshift({$match : {secretTour: {$ne: true}}})
+//     next()
+// })
 // creating the model
 const Model = mongoose.model('tours', schema) // tours is the collection that will be created if it doen't exist before.
 

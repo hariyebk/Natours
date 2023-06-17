@@ -24,6 +24,14 @@ router
 router
 .route('/5-most-cheap-tours')
 .get(routehandlers.mostcheapalias, routehandlers.getalltours);
+// tours nearby with certain radius
+router
+.route('/tour-within/:distance/center/:latlng/unit/:unit')
+.get(routehandlers.gettoursByRadius)
+// Distances of tours from the current position of the user
+router
+.route('/distance/:latlng/unit/:unit')
+.get(routehandlers.getTourDistances)
 // create and get tours
 router
 .route('/')
