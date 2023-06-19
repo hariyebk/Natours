@@ -8,12 +8,18 @@ const globalErrorHandler = require('./controllers/errorHandler')
 const rateLimit = require('express-rate-limit')
 const session = require('express-session')
 const helmet = require('helmet')
+const path = require('path')
 const mongoSanitize = require('express-mongo-sanitize')
 const xss = require('xss-clean')
 const hpp = require('hpp')
 
 
 const app = express();
+// template engine: pu
+app.set('view engine', 'pug')
+app.set('views', path.join(__dirname, 'views'))
+// serving static files
+app.use(express.static(path.join(__dirname, 'public')))
 // helmet package sets various http headers to secure our application from most common web attacks like cross-site-forgery, cross-site-scripting ...etc
 app.use(helmet())
 // creating a middleware between the request and response to accces body of the request incase of a post request.
@@ -82,10 +88,15 @@ app.use(session({
 // })
 // reading the tours file from our json data
 
-
-
-
 // mounting the routers for sub paths
+
+// A Route for rendering the page
+app.get('/', (req, res) => {
+    res.status(200).render('base', {
+        tour: " The Forest Hiker",
+        user: "harun"
+    })
+})
 app.use('/api/v1/tours', toursrouter)
 app.use('/api/v1/users', usersrouter)
 app.use('/api/v1/reviews', reviewrouter)

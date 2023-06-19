@@ -1,0 +1,15 @@
+html
+    head 
+        title Natours | #{tour}
+        //- attribute values should be in single quotes.
+        link(rel = 'stylesheet' href = 'css/style.css')
+        link(rel = 'shortcut icon' type = 'image/png' href = 'image/favicon.png')
+        
+    body
+        //- buffered code is a code that outputs value.
+        h1= tour
+        h2= user.toUpperCase()
+        //- unbuffered code
+        - const x = 20
+        h3= x + 20
+        p  I am starting backend web development
