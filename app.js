@@ -3,6 +3,7 @@ const morgan = require('morgan') // logger middleware
 const toursrouter = require('./routes/toursRoutes')
 const usersrouter = require('./routes/usersRoutes')
 const reviewrouter = require('./routes/reviewRoutes')
+const viewRouter = require('./routes/viewRoutes')
 const appError = require('./utils/appError')
 const globalErrorHandler = require('./controllers/errorHandler')
 const rateLimit = require('express-rate-limit')
@@ -15,7 +16,7 @@ const hpp = require('hpp')
 
 
 const app = express();
-// template engine: pu
+// template engine: pug
 app.set('view engine', 'pug')
 app.set('views', path.join(__dirname, 'views'))
 // serving static files
@@ -91,15 +92,10 @@ app.use(session({
 // mounting the routers for sub paths
 
 // A Route for rendering the page
-app.get('/', (req, res) => {
-    res.status(200).render('base', {
-        tour: " The Forest Hiker",
-        user: "harun"
-    })
-})
 app.use('/api/v1/tours', toursrouter)
 app.use('/api/v1/users', usersrouter)
 app.use('/api/v1/reviews', reviewrouter)
+app.use('/', viewRouter)
 
 // handling unhandled routes
         // only works if all the above middleware can't catch the request. so it means it's a wrong path.
