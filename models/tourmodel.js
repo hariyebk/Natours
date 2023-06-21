@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 const slugify = require('slugify')
-const userModel = require('./usermodel')
 // const validator = require('validator')
 // Business logic how the data should be stored.
 
@@ -161,7 +160,6 @@ schema.virtual('reviews', {
     foreignField: 'tour',
     // localField is the mongoose ObjectId for the current model
     localField: '_id'
-
 })
 // In Mongoose, middleware functions can be used to execute custom logic before or after certain events occur in the document lifecycle. These middleware functions can be very powerful and flexible, allowing you to add custom logic to your Mongoose schema and models at various points in the document lifecycle.
 // DOCUMENT MIDDLEWARE: runs only before the save() or create() commands.
@@ -192,7 +190,7 @@ schema.pre(/^find/, function(next){
     next() // passes the filtered query object.
 })
 // populating the child refrence with the actual guide data
-schema.pre(/^find/g, function(next){
+schema.pre(/^find/, function(next){
     // using populate method reduces performance because it uses find query behind the scences.
     this.populate({
         path: "guides",

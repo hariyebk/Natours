@@ -5,6 +5,6 @@ const routecontroller = require('../controllers/viewcontroller')
 // overview page
 router.get('/', routecontroller.overview)
 // Tours page
-router.get('/tour', routecontroller.tour)
+router.get('/tour/:slug', routecontroller.tour)
 
 module.exports = router

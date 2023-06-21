@@ -43,7 +43,7 @@ reviewSchema.pre(/^find/, function(next){
     // A chain of populates reduces performance. that why we don't populate reviews with tours.
     this.populate({
         path: "user",
-        select: 'name'
+        select: 'name photo'
     })
     next()
 })
