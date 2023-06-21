@@ -22,7 +22,7 @@ app.set('views', path.join(__dirname, 'views'))
 // serving static files
 app.use(express.static(path.join(__dirname, 'public')))
 // helmet package sets various http headers to secure our application from most common web attacks like cross-site-forgery, cross-site-scripting ...etc
-app.use(helmet())
+app.use(helmet({contentSecurityPolicy: false}))
 // creating a middleware between the request and response to accces body of the request incase of a post request.
 // middlewares
 app.use(express.json({limit: '10kb'}));

@@ -1,5 +1,10 @@
 extends base
 include _reviewCards
+//- Injects the mapbox.js file after original the head block 
+block append head 
+    script(src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js')
+    link(href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet')
+    //- script(src = '/js/mapbox.js')
 
 mixin overviewBox(label, text, icon)
     .overview-box__detail
@@ -61,7 +66,8 @@ block content
                 img.picture-box__img(src=`/img/tours/${img}`, alt=`${tour.name} Tour ${i + 1}`, class = `picture-box__img--${i + 1}` )
 
     section.section-map
-        #map
+        //- embeding the tour location data into the Html with custom data attribute. Remember we can set our own attribute in Html.
+        #map(data-locations=`${JSON.stringify(tour.locations)}`)
 
     section.section-reviews
         .reviews
