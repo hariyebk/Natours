@@ -81,7 +81,7 @@ userSchema.pre(/^find/g, function(next) {
     next()
 })
 // An instance method is available on all documents of a collection and used for specific kinds of tasks.
-userSchema.methods.comparePasswords = async function(candidatepassword, userpassword){
+userSchema.methods.comparepasswords = async function(candidatepassword, userpassword){
     // returns true if the hash password saved into the database is exactly the same as the login password.
     return await bcrypt.compare(candidatepassword, userpassword)
 }

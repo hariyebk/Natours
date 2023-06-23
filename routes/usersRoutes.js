@@ -17,8 +17,10 @@ router.patch('/resetPassword/:token', authentication.resetPassword)
 // since middlewares run based on order. all endpoints that come next will be secured.
 router.use(authentication.protect)
 
-router.patch('/updateMyPassword', authentication.updatePassword)
 // for user to update his data
+router
+.patch('/updateMyPassword', authentication.updatePassword)
+
 router
 .patch('/updateMe', routehandlers.updateMe)
 // for user to Inactivate his account

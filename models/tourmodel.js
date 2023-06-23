@@ -110,7 +110,7 @@ const schema = new mongoose.Schema({
         },
         coordinates: [Number],
         address: String,
-        descritption: String,
+        description: String,
         day: Number
     }
 ],

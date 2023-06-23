@@ -120,8 +120,8 @@ exports.login = catchasync( async (req, res, next) => {
     }
     // check if the user exists and the password is correct
     const user = await userModel.findOne({email}).select('+password').select('+active')
-    // || !await user.comparePasswords(password, user.password)
-    if(!user){
+    // || !await user.comparepasswords(password, user.password)
+    if(!user || !await user.comparepasswords(password, user.password)){
         // When handling authentication errors, it is generally considered good practice to return a generic error message such as "Incorrect username or password" instead of specifying which part of the authentication process failed (e.g. "Invalid username" or "Incorrect password").The main benefit of returning a generic error message is that it can help prevent potential security vulnerabilities. If an attacker is trying to gain unauthorized access to a system, they may use various techniques such as brute force attacks to guess a user's username and password. By returning a generic error message, you are not providing any additional information that could help the attacker narrow down their guesses. On the other hand, if you return a specific error message such as "Invalid username", the attacker now knows that the username they guessed was incorrect and can focus their efforts on guessing a different username.
 
         // increase the login attempt by one because the user has failed to log in.
@@ -138,13 +138,51 @@ exports.login = catchasync( async (req, res, next) => {
 exports.protect = catchasync(async ( req, res, next) => {
     // everytime the user vists some route , he should send his jsonwebtoken within the request object. then we make sure that the user exists in our database.
     let token
-    //1. check if token exits within the request
+    //1. check if token exits within the request made from the api or 
         if(
             req.headers.authorization && 
             req.headers.authorization.startsWith('Bearer'))
         {
             token = req.headers.authorization.split(' ')[1]
+        }
+        // 2. check if token exits within the request cookie from the browsser
+        else if(req.cookies.jwt){
+            token = req.cookies.jwt
+        }
+        if(!token){
+            return next(new appError('Sign up or Log in to get access', 401))
+        }
+    //2. check for verified signeture (not expired or invalid)
+            // Promisifying the jwt.verify function using util.promisify() is not strictly necessary in this case
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET)
+    // returns the payload of the token
+    //3. check if user still exits (if account is not deleted or token's payload is not changed by a 3rd party)
+    const currentuser = await userModel.findById(decoded.id)
+    if(!currentuser) next(new appError('User not found.', 401))
 
+    //4. check if the user has chaged their password after the token has been issued.
+    if(await currentuser.checkIfPasswordChanged(decoded.iat)){
+        next(new appError('Password has been changed, Try to login agian'))
+    }
+    // finally grant access to protected route by passing the user for the next middleware
+    req.user = currentuser
+    next()
+})
+
+// check if the user has logged in and dynamically change the user interface
+exports.isLoggedIn = catchasync(async ( req, res, next) => {
+    // everytime the user vists some route , he should send his jsonwebtoken within the request object. then we make sure that the user exists in our database.
+    let token
+    //1. check if token exits within the request made from the api or 
+        if(
+            req.headers.authorization && 
+            req.headers.authorization.startsWith('Bearer'))
+        {
+            token = req.headers.authorization.split(' ')[1]
+        }
+        // 2. check if token exits within the request cookie from the browsser
+        else if(req.cookies.jwt){
+            token = req.cookies.jwt
         }
         if(!token){
             return next(new appError('Sign up or Log in to get access', 401))
@@ -236,8 +274,8 @@ exports.updatePassword = catchasync( async (req, res, next) => {
     // 1. Get user from req.user 
     const user = await userModel.findById(req.user.id).select('+password')
     // 2. compare current password with the original 
-                // the user knows thier original password in this case and they want to change it.
-    if(! await user.comparePasswords(req.body.currentPassword, user.password)) return next(new appError(`Current password doesn't macth the original password. try again !!`, 400))
+            // the user knows thier original password in this case and they want to change it.
+    if(! await user.comparepasswords(req.body.currentPassword, user.password)) return next(new appError(`Current password doesn't macth the original password. try again !!`, 400))
     //3. update the password
     user.password = req.body.password
     user.passwordConfirm = req.body.passwordConfirm

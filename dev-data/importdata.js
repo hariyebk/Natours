@@ -21,15 +21,15 @@ mongoose.connect(db, {
     console.log(`couldn't connect to the remote database : ${err.message}`)
 })
 const tours = JSON.parse(fs.readFileSync(`${__dirname}/data/tours.json`, 'utf-8'))
-const users = JSON.parse(fs.readFileSync(`${__dirname}/data/users.json`, 'utf-8'))
-const reviews = JSON.parse(fs.readFileSync(`${__dirname}/data/reviews.json`, 'utf-8'))
+// const users = JSON.parse(fs.readFileSync(`${__dirname}/data/users.json`, 'utf-8'))
+// const reviews = JSON.parse(fs.readFileSync(`${__dirname}/data/reviews.json`, 'utf-8'))
 
 console.log('finished extarcting Data')
 const upload = async () => {
     try{
         await Model.create(tours)
-        await userModel.create(users, {validateBeforeSave: false})
-        await reviewModel.create(reviews)
+        // await userModel.create(users, {validateBeforeSave: false})
+        // await reviewModel.create(reviews)
         console.log('Data successfully loaded !!')
     }
     catch(err){
@@ -40,8 +40,8 @@ const upload = async () => {
 const deleted = async () => {
     try{
         await Model.deleteMany()
-        await userModel.deleteMany()
-        await reviewModel.deleteMany()
+        // await userModel.deleteMany()
+        // await reviewModel.deleteMany()
         console.log('Data Successfully deleted from the database')
     }
     catch(err){

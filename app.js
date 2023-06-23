@@ -13,6 +13,7 @@ const path = require('path')
 const mongoSanitize = require('express-mongo-sanitize')
 const xss = require('xss-clean')
 const hpp = require('hpp')
+const cookieParser = require('cookie-parser')
 
 
 const app = express();
@@ -21,6 +22,8 @@ app.set('view engine', 'pug')
 app.set('views', path.join(__dirname, 'views'))
 // serving static files
 app.use(express.static(path.join(__dirname, 'public')))
+// cookie parser from the request object
+app.use(cookieParser())
 // helmet package sets various http headers to secure our application from most common web attacks like cross-site-forgery, cross-site-scripting ...etc
 app.use(helmet({contentSecurityPolicy: false}))
 // creating a middleware between the request and response to accces body of the request incase of a post request.
@@ -40,6 +43,12 @@ app.use(hpp({
     // EXCULDE: sometimes we may want two or more of the same query parameters in the url
     whitelist: ['duration', 'ratingAvarage', 'ratingQuantity', 'maxGroupSize', 'difficulty', 'price']
 }))
+
+// Test middleware
+// app.use((req, res, next) => {
+//     console.log(req.cookies)
+//     next()
+// })
 
  // Request Limiter: To prevent Brute-Force and DDos Attacks
         // The user can only make 100 http requests per hour
