@@ -29,6 +29,7 @@ app.use(helmet({contentSecurityPolicy: false}))
 // creating a middleware between the request and response to accces body of the request incase of a post request.
 // middlewares
 app.use(express.json({limit: '10kb'}));
+app.use(express.urlencoded({extended: true, limit: '10kb'}))
 // restricting the size of incoming payloads
  // parsing the request has to be the first middleware.
 

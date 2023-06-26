@@ -102,7 +102,7 @@ exports.confirmEmail = catchasync( async (req, res, next) => {
     // jwt token 
     GenerateToken(user, 201, res)
 })
-// logging user
+// logg in user
 exports.login = catchasync( async (req, res, next) => {
     // Accepting only the email and pssword from req.body As security measure
     const {email, password} = req.body
@@ -134,6 +134,15 @@ exports.login = catchasync( async (req, res, next) => {
     GenerateToken(user, 200, res)
 })
 
+// LOG out user
+exports.logout = (req, res) => {
+    // Since there is no way we can delete the jwt token in the user's browsser.let's overwrite it by sending a new token with the same name but holds no value.
+    res.cookie('jwt', '', {
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    })
+    res.status(200).json({status: "success"})
+}
 // verifing logged in users for protected routes
 exports.protect = catchasync(async ( req, res, next) => {
     // everytime the user vists some route , he should send his jsonwebtoken within the request object. then we make sure that the user exists in our database.
@@ -150,7 +159,7 @@ exports.protect = catchasync(async ( req, res, next) => {
             token = req.cookies.jwt
         }
         if(!token){
-            return next(new appError('Sign up or Log in to get access', 401))
+            return res.redirect('/login')
         }
     //2. check for verified signeture (not expired or invalid)
             // Promisifying the jwt.verify function using util.promisify() is not strictly necessary in this case
@@ -166,43 +175,29 @@ exports.protect = catchasync(async ( req, res, next) => {
     }
     // finally grant access to protected route by passing the user for the next middleware
     req.user = currentuser
+    // for the templates
+    res.locals.user = currentuser
     next()
 })
 
 // check if the user has logged in and dynamically change the user interface
 exports.isLoggedIn = catchasync(async ( req, res, next) => {
-    // everytime the user vists some route , he should send his jsonwebtoken within the request object. then we make sure that the user exists in our database.
-    let token
-    //1. check if token exits within the request made from the api or 
-        if(
-            req.headers.authorization && 
-            req.headers.authorization.startsWith('Bearer'))
-        {
-            token = req.headers.authorization.split(' ')[1]
-        }
         // 2. check if token exits within the request cookie from the browsser
-        else if(req.cookies.jwt){
-            token = req.cookies.jwt
+        if(req.cookies.jwt){
+             //2. check for verified signeture (not expired or invalid)
+            const decoded = await jwt.verify(req.cookies.jwt, process.env.JWT_SECRET)
+            // returns the payload of the token
+            //3. check if user still exits (if account is not deleted or token's payload is not changed by a 3rd party)
+            const currentuser = await userModel.findById(decoded.id)
+            if(!currentuser) return next()
+            //4. check if the user has chaged their password after the token has been issued.
+            if(await currentuser.checkIfPasswordChanged(decoded.iat)) return next()
+             // if it reaches this point that means the user is logged in , so create a variable to be accessible by the template.
+            res.locals.user = currentuser
+            return next()
         }
-        if(!token){
-            return next(new appError('Sign up or Log in to get access', 401))
-        }
-    //2. check for verified signeture (not expired or invalid)
-            // Promisifying the jwt.verify function using util.promisify() is not strictly necessary in this case
-        const decoded = await jwt.verify(token, process.env.JWT_SECRET)
-        // returns the payload of the token
-        
-    //3. check if user still exits (if account is not deleted or token's payload is not changed by a 3rd party)
-    const currentuser = await userModel.findById(decoded.id)
-    if(!currentuser) next(new appError('User not found.', 401))
-
-    //4. check if the user has chaged their password after the token has been issued.
-    if(await currentuser.checkIfPasswordChanged(decoded.iat)){
-        next(new appError('Password has been changed, Try to login agian'))
-    }
-    // finally grant access to protected route by passing the user for the next middleware
-    req.user = currentuser
-    next()
+        // else the user is not logged in because the cookie does'nt have the jwt token.
+        next() // no user variable is created and passed to the template.
 })
 
 exports.forgotPassword = catchasync( async (req, res, next) => {

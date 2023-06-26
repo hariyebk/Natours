@@ -19,36 +19,65 @@ const handleValidationError = err => {
 const handleJsonWebTokenError = () => new appError(`Access denied. Sign up or Log in to get access`, 401)
 const handleTokenExpiredError = () => new appError('Your Token has expired. please try to login again', 401)
 // In developement enviroment we want more information about the errors that happened.
-const sendErrorDev = (err, res) => {
-    res.status(err.statusCode || 500).json({
-        status: err.status = err.status || 'error',
-        error: err,
-        stackTrace: err.stack,
-        message: err.message
-    })
-}
-// In Production enviroment the client should see a simple and user friendly error.
-const sendErrorPord = (err, res) => {
-    // for operational errors
-    if(err.isoperational){
+const sendErrorDev = (err, req, res) => {
+     // if the error happend while using our api, we don't need to display A user friendly error template.
+    if(req.originalUrl.startsWith('/api')){
         res.status(err.statusCode || 500).json({
-            status:  err.status || 'error',
+            status: err.status || 'error',
+            error: err,
+            stackTrace: err.stack,
             message: err.message
         })
     }
-     // for programming or other unkown errors: don't leak error details, just say something nice and easy.
+    // if the error occured on the browsser, we need to display a user friendly Error message.
     else{
-        console.log(err)
-        res.status(500).json({
-            status: 'Error',
-            message: 'Something went wrong !!'
+        res.status(500).render('error', {
+            title: 'something went wrong !!',
+            message: err.message
         })
+    }
+}
+// In Production enviroment the client should see a simple and user friendly error.
+const sendErrorPord = (err, req, res) => {
+    // API
+    if(req.originalUrl.startsWith('/api')){
+        // for operational errors
+        if(err.isoperational){
+                res.status(err.statusCode || 500).json({
+                    status:  err.status || 'error',
+                    message: err.message
+                })
+            }
+         // for programming or other unkown errors: don't leak error details, just say something nice and easy.
+        else{
+            console.log(err)
+            res.status(500).json({
+                status: 'Error',
+                message: 'Something went wrong !!'
+            })
+        }
+    }
+    else{
+        // Browsser
+            if(err.isoperational){
+                res.status(err.statusCode).render('error', {
+                    title: 'something went wrong !!',
+                    message: err.message
+                })
+            }
+            else{
+                return res.status(err.statusCode).render('error', {
+                    title: 'something went wrong !!',
+                    message: 'Please try again later !!'
+                })
+            }
     }
 }
 module.exports = (err, req, res, next) => {
     // for development enviroment
+    
     if(process.env.NODE_ENV === 'development'){
-        sendErrorDev(err, res)
+        sendErrorDev(err, req, res)
     }
     // for production enviroment
     if(process.env.NODE_ENV === 'production'){
@@ -65,7 +94,7 @@ module.exports = (err, req, res, next) => {
         if(error.name === 'JsonWebTokenError') error = handleJsonWebTokenError()
         // for expired tokens
         if(error.name === 'TokenExpiredError') error = handleTokenExpiredError()
-        sendErrorPord(error, res)
+        sendErrorPord(error, req, res)
     }  
 }
 // since we passed 4 argumets , express will automatically think that it is an error handling middleware. so when any routeHandler or middleware throws an error as next(err), it will be catched in this global error handling middleware.
