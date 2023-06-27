@@ -2,8 +2,16 @@ const Model = require('../models/tourmodel');
 const appError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsyncErrors');
 const handlers = require('./handlerFactory')
-// a middleware(param) inside another middleware(param) that check for the right id
+const upload = require('../utils/multer')
+const sharp = require('sharp')
+// A middleware that handles Multiple tour image uploads
+exports.uploadTourImages = upload.fields([{name: 'imageCover', maxCount: 1}, {name: 'images', maxCount: 3}])
+// for single image upload we use : upload.single('filedname') and it returns req.file
+// for multiple image uploads with only one field name we use: upload.array('fieldname', maxCount: 3) and it returns req.files
+// for multiple image uploads with different field names we use: upload.fields('fieldname', maxCount: 5) and it returns req.
 
+
+// a middleware(param) inside another middleware(param) that check for the right id
 // middleware for aliases
 exports.mostcheapalias = (req, res, next) => {
   req.query.sort = 'price';
@@ -19,6 +27,43 @@ exports.toptouralias = (req, res, next) => {
 };
 // route handlers should not deal with duplicate way of handling errors with try catch blocks. so lets delegate a function for it
 // route handlers for tours
+
+// A middleware to process the uploaded image
+exports.resizeTourImages = catchAsync( async (req, res, next) => {
+  if(!req.files) return next()
+  const imageCoverFileName = `tour-${req.params.id}-${Date.now()}-cover.jpeg`
+  // resizing tour images that are uploaded
+
+  // for the cover image
+  if(req.files.imageCover){
+    await sharp(req.files.imageCover[0].buffer)
+      .resize(2000, 1333)
+      .toFormat('jpeg')
+      .jpeg({quality: 90})
+      .toFile(`./public/img/tours/${imageCoverFileName}`)
+    // pass the resized tour image to the req.body
+    req.body.imageCover = imageCoverFileName
+  }
+  // for images
+  if(req.files.images){
+  req.body.images = []
+    await Promise.all(
+      // resizing each image in the req.files.images array
+      req.files.images.map(async (img, i) => {
+        // the file name for each individual image
+        const filename = `tour-${req.params.id}-${Date.now()}-${i}`
+        await sharp(img.buffer)
+        .resize(500, 500)
+        .toFormat('jpg')
+        .jpeg({quality: 90})
+        .toFile(`./public/img/tours/${filename}`)
+        // add each resized image into req.body.image
+        req.body.images.push(filename)
+      })
+    )
+  }
+  next()
+})
 exports.getalltours = handlers.findalldoc(Model)
 exports.createtour = handlers.createdoc(Model)
 exports.updatetour = handlers.updatedoc(Model)

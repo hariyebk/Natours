@@ -6,7 +6,6 @@ const router = express.Router();
 // // a middleware param to check if the user's name is correct
 // router.param('name', routehandlers.userchecker);
 // get all users.
-
 // A special Api endpoint that doesn't follow the REST philosophy
 router.post('/signup', authentication.signup)
 router.get('/confirmEmail/:token', authentication.confirmEmail)
@@ -23,7 +22,7 @@ router
 .patch('/updateMyPassword', authentication.updatePassword)
 
 router
-.patch('/updateMe', routehandlers.updateMe)
+.patch('/updateMe', routehandlers.uploadPhoto, routehandlers.resizeUploadedPhoto, routehandlers.updateMe)
 // for user to Inactivate his account
 router
 .delete('/deleteMe', routehandlers.deleteMe)

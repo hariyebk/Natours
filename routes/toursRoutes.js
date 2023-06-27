@@ -42,7 +42,13 @@ router
 router
 .route('/:id?')
 .get(routehandlers.gettour) // anyone can access our api
-.patch(authcontroller.protect, authcontroller.authorized('admin', 'lead-guide'), routehandlers.updatetour)
+.patch(
+    authcontroller.protect, 
+    authcontroller.authorized('admin', 'lead-guide'),
+    routehandlers.uploadTourImages, 
+    routehandlers. resizeTourImages, 
+    routehandlers.updatetour
+)
 .delete(authcontroller.protect, authcontroller.authorized('admin', 'lead-guide'), routehandlers.deletetour); // for special requests.
 module.exports = router;
 // authcontroller.protect, authcontroller.authorized('admin', 'lead-guide'),
