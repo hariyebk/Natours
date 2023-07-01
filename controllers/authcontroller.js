@@ -3,7 +3,7 @@ const  catchasync = require('./../utils/catchAsyncErrors')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
 const appError = require('./../utils/appError')
-const sendemail = require('../utils/email')
+const email = require('../utils/email')
 
 const signToken = id => {
     // creating the json web token for the specific user
@@ -51,56 +51,56 @@ exports.signup = catchasync( async (req, res, next) => {
     // update database
     await newuser.save({validateBeforeSave: false})
     // returns the token and sets confirmationToken and confirmationTokenExpires properties on the newuser.
-    const confirmationUrl = `${req.protocol}://${req.get('host')}/api/v1/users/confirmEmail/${confirmToken}`
-    const message = `click the following link to confirm your email ${confirmationUrl}`
-    // send email
-    try{
-        await sendemail({
-            email: req.body.email,
-            subject: 'confirm your email',
-            message
-        })
-        // sending the response
-        res.status(201).json({
-            status: "success",
-            message: "please confirm your email address by clicking the link sent to your email"
-        })
-
-    }catch(err){
+    const url = `${req.protocol}://${req.get('host')}/emailverified/${confirmToken}`
+    try
+    {
+        // send emailconfirmation message
+        await new email(newuser, url).confirmEmail()
+            // sending the response for our api
+            if(req.originalUrl.startsWith('/api')){
+                res.status(201).json({
+                    status: "success", 
+                    message: "please confirm your email address by clicking the link sent to your email"
+                })
+            }
+    }
+    catch(err){
         // if sending the email fails for some reason
         newuser.confirmationToken = undefined
         newuser.confirmationTokenExpires = undefined
         newuser.active = false
         //update the database
-        await user.save({validateBeforeSave: false})
+        await newuser.save({validateBeforeSave: false})
         return next(new appError('There was a problem sending your confirmation link. please try again'))
     }
 })
 
 // confirm new user
 exports.confirmEmail = catchasync( async (req, res, next) => {
-    // encrypting the token sent to the email to compare with thhe confirmationToken in the database.
-    const hashedtoken = crypto.createHash('sha256').update(req.params.token).digest('hex')
-    // check if the confirmation link has not expired
-    const user = await userModel.findOne({
-        confirmationToken: hashedtoken,
-        confirmationTokenExpires: {$gt: Date.now()}
-    })
-    if(!user){
-        // removing the new user if their confirmation link has expired.
-        await userModel.deleteOne({confirmationToken: hashedtoken})
-        return next(new appError('Your confirmation link has expired. Try again'))
-    }
-    // activate the user as legit
-    user.confirmationToken = undefined
-    user.confirmationTokenExpires = undefined
-    // activate user
-    user.active = true,
-    // update the database
-    await user.save({validateBeforeSave: false})
-    // log in user
-    // jwt token 
-    GenerateToken(user, 201, res)
+        // encrypting the token sent to the email to compare with thhe confirmationToken in the database.
+        const hashedtoken = crypto.createHash('sha256').update(req.params.id).digest('hex')
+        console.log(hashedtoken)
+        // check if the confirmation link has not expired
+        const user = await userModel.findOne({
+            confirmationToken: hashedtoken,
+            confirmationTokenExpires: {$gt: Date.now()}
+        })
+        console.log(user)
+        if(!user){
+            // removing the new user if their confirmation link has expired.
+            await userModel.deleteOne({confirmationToken: hashedtoken})
+            return next(new appError('Your confirmation link has expired. Try again'))
+        }
+        // activate the user as legit
+        user.confirmationToken = undefined
+        user.confirmationTokenExpires = undefined
+        // activate user
+        user.active = true,
+        // update the database
+        await user.save({validateBeforeSave: false})
+        req.confirmationToken = undefined
+        // jwt token 
+        GenerateToken(user, 201, res)
 })
 // logg in user
 exports.login = catchasync( async (req, res, next) => {
@@ -211,22 +211,24 @@ exports.forgotPassword = catchasync( async (req, res, next) => {
     // saving the encrypted request token and its expire date into our database
     await user.save({validateBeforeSave: false})
     // reset url to send email to the user
-    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`
-    const message = `To create your new password: Go to this link ${resetUrl}`
+    const resetUrl = `${req.protocol}://${req.get('host')}/resetPassword/${resetToken}`
     // If sending the email fails for some reason we have to unset the passwordResetToken and passwordResetExpires property of the user in the database. but we can't do this if we used the catchAsyc function. we need a new try catch block
     try{
         // sending the email
-        await sendemail({
-            email: req.body.email,
-            subject: 'Your password reset token',
-            message
-            // we can insert an html code to be displayed for the user in the email
-        })
-        // sending response
-        res.status(200).json({
-            status: "success",
-            message: "Token sent to email"
-        })
+        // await sendemail({
+        //     email: req.body.email,
+        //     subject: 'Your password reset token',
+        //     message
+        //     // we can insert an html code to be displayed for the user in the email
+        // })
+        await new email(user, resetUrl).resetpassword()
+        // sending response for api requests
+        if(req.originalUrl.startsWith('/api')){
+            res.status(200).json({
+                status: "success",
+                message: "Token sent to email"
+            })
+        }
     }
     catch(err){
         // If sending the email fails for some reason
@@ -248,6 +250,7 @@ exports.resetPassword = catchasync( async (req, res, next) => {
         passwordResetExpires: {$gt: Date.now()
         }
     })
+    console.log(user)
     if(!user){
         req.user.passwordResetToken = undefined
         req.user.passwordResetExpires = undefined

@@ -9,6 +9,14 @@ router.get('/', authcontroller.isLoggedIn,  routecontroller.overview)
 router.get('/tour/:slug', authcontroller.isLoggedIn,  routecontroller.tour)
 // Log in page
 router.get('/login', authcontroller.isLoggedIn,  routecontroller.login)
+// sign up page
+router.get('/signup', routecontroller.signup)
+// email confirmation
+router.get('/confirmEmail', routecontroller.confirmEmail)
+// user verfied their email
+router.get('/emailverified/:id?', routecontroller.verified)
+// reset new password
+router.get('/resetPassword/:token?', routecontroller.resetPassword)
 // user's page
 router.get('/me', authcontroller.protect, routecontroller.getAccount)
 // router.post('/submit-user-data', authcontroller.protect, routecontroller.updateuserdata)
