@@ -161,6 +161,13 @@ schema.virtual('reviews', {
     // localField is the mongoose ObjectId for the current model
     localField: '_id'
 })
+schema.virtual('bookings', {
+    ref: 'bookings',
+    // forignField is the field name that refers the current model in reviews model
+    foreignField: 'tour',
+    // localField is the mongoose ObjectId for the current model
+    localField: '_id'
+})
 // In Mongoose, middleware functions can be used to execute custom logic before or after certain events occur in the document lifecycle. These middleware functions can be very powerful and flexible, allowing you to add custom logic to your Mongoose schema and models at various points in the document lifecycle.
 // DOCUMENT MIDDLEWARE: runs only before the save() or create() commands.
         // pre hook

@@ -48,17 +48,18 @@ exports.signup = catchasync( async (req, res, next) => {
         passwordChangedAt: req.body.passwordChangedAt,
         role: req.body.role
     })
-    console.log(newuser)
     if(!newuser) return next(new appError('Invalid Input data !!'))
+    // Generate email confirmation token
+    const confirmToken = await newuser.EmailConfirmationToken()
     // update database
     await newuser.save({validateBeforeSave: false})
     // returns the token and sets confirmationToken and confirmationTokenExpires properties on the newuser.
-    const url = `${req.protocol}://${req.get('host')}/verifyEmail`
+    const url = `${req.protocol}://${req.get('host')}/verifyEmail/${confirmToken}`
+
     try
     {
         // send emailconfirmation message
         await new email(newuser, url).confirmEmail()
-        console.log('email sent')
         // sending response for api requests
         if(req.originalUrl.startsWith('/api')){
             return res.status(200).json({
@@ -66,16 +67,6 @@ exports.signup = catchasync( async (req, res, next) => {
                 message: "Token sent to email"
             })
         }
-        // Generate email confirmation token
-        const confirmToken = await newuser.EmailConfirmationToken()
-        console.log(confirmToken)
-        // send the confirmation token as a cookie
-        const cookieOptions = {
-            expires: new Date(Date.now()+ 30 * 1000),
-            httpOnly: true,
-            secure: true
-        }
-        res.cookie('confirmtoken', confirmToken, cookieOptions)
     }
     catch(err){
         // if sending the email fails for some reason
@@ -91,8 +82,7 @@ exports.signup = catchasync( async (req, res, next) => {
 // confirm new user
 exports.confirmEmail = catchasync( async (req, res, next) => {
         // encrypting the token sent to the email to compare with thhe confirmationToken in the database.
-        const hashedtoken = crypto.createHash('sha256').update(req.cookies.confirmtoken).digest('hex')
-        console.log(hashedtoken)
+        const hashedtoken = crypto.createHash('sha256').update(req.params.token).digest('hex')
         // check if the confirmation link has not expired
         const user = await userModel.findOne({
             confirmationToken: hashedtoken,
@@ -223,7 +213,7 @@ exports.forgotPassword = catchasync( async (req, res, next) => {
     // saving the encrypted request token and its expire date into our database
     await user.save({validateBeforeSave: false})
     // reset url to send email to the user
-    const resetUrl = `${req.protocol}://${req.get('host')}/resetPassword`
+    const resetUrl = `${req.protocol}://${req.get('host')}/resetpassword`
     // If sending the email fails for some reason we have to unset the passwordResetToken and passwordResetExpires property of the user in the database. but we can't do this if we used the catchAsyc function. we need a new try catch block
     try{
         // sending the email
@@ -268,7 +258,6 @@ exports.resetPassword = catchasync( async (req, res, next) => {
         passwordResetToken: hashedtoken,
         passwordResetExpires: {$gt: Date.now()}
     })
-    console.log(user)
     if(!user){
         req.user.passwordResetToken = undefined
         req.user.passwordResetExpires = undefined

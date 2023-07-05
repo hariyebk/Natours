@@ -1,8 +1,11 @@
 const Model = require('../models/tourmodel')
 const userModel = require('../models/usermodel')
+const bookingModel = require('../models/bookingmodel')
+const reviewModel = require('../models/reviewmodel')
 const catchAsync = require('../utils/catchAsyncErrors')
 const authcontroller = require('./authcontroller')
 const appError = require('../utils/appError')
+const catchAsyc = require('../utils/catchAsyncErrors')
 
 exports.overview = catchAsync( async (req,res, next) => {
     // Get Tour data from collection
@@ -49,12 +52,28 @@ exports.resetPassword = (req, res) => {
         title: 'Reset Password',
     })
 }
-// exports.verified =  (req, res, next) => {
-//     // verify user email
-//     authcontroller.confirmEmail()
-//     // redirect user to the home page
-//     res.redirect('/')
-// }
+exports.getMytours = catchAsyc( async (req, res, next) => {
+    // find all bookings the user has booked
+    const bookings = await bookingModel.find({user: req.user.id})
+    //  tours id's from the bookings
+    const tourIds = bookings.map(el => el.tour)
+    // actual tour data based
+    const tours = await Model.find({_id: {$in: tourIds}})
+    // PICKS all the tours if their id's is found on the tourIds array.
+    res.status(200).render('overview', {
+        title: 'My-Tours',
+        tours
+    })
+})
+exports.getMyreviews = catchAsyc( async (req, res, next) => {
+    // find the reviews the user has made
+    const reviews = await reviewModel.find({user: req.user.id})
+    // display review cards
+    res.status(200).render('reviews', {
+        title: 'My Reviews',
+        reviews
+    })
+})
 exports.getAccount = (req, res) => {
     res.status(200).render('userprofile', {
         title: 'My Account'
