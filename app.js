@@ -4,6 +4,7 @@ const toursrouter = require('./routes/toursRoutes')
 const usersrouter = require('./routes/usersRoutes')
 const reviewrouter = require('./routes/reviewRoutes')
 const viewRouter = require('./routes/viewRoutes')
+const bookingRouter = require('./routes/bookingRoutes')
 const appError = require('./utils/appError')
 const globalErrorHandler = require('./controllers/errorHandler')
 const rateLimit = require('express-rate-limit')
@@ -105,6 +106,8 @@ app.use(session({
 app.use('/api/v1/tours', toursrouter)
 app.use('/api/v1/users', usersrouter)
 app.use('/api/v1/reviews', reviewrouter)
+app.use('/api/v1/bookings', bookingRouter)
+
 app.use('/', viewRouter)
 
 // handling unhandled routes

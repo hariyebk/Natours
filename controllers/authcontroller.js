@@ -12,7 +12,7 @@ const signToken = id => {
     expiresIn: process.env.JWT_EXPIRES_IN
 } ) // token header will be created automatically.
 }
-const GenerateToken = (user, statusCode, res) => {
+const GenerateToken = (user, statusCode, req, res) => {
     const token = signToken(user._id)
     // A cookie is just a small piece of string sent from the server. for future requets from the same server it will be sent with the request together. Every connection between the server and the client should be held by https only.
     const cookieOptions = {
@@ -24,14 +24,16 @@ const GenerateToken = (user, statusCode, res) => {
     if(process.env.NODE_ENV === 'production') cookieOptions.secure = true
     res.cookie('jwt', token, cookieOptions)
     // Logging users as soon as they sign up
-    res.status(statusCode).json({
-        status: 'success',
-        token,
-        // sending the jwt for the user.
-        data: {
-            user
-        }
-    })
+    if(req.originalUrl.startsWith('/api')){
+        return res.status(statusCode).json({
+            status: 'success',
+            token,
+            // sending the jwt for the user.
+            data: {
+                user
+            }
+        })
+    }
 }
 // Authentication process
 
@@ -46,23 +48,34 @@ exports.signup = catchasync( async (req, res, next) => {
         passwordChangedAt: req.body.passwordChangedAt,
         role: req.body.role
     })
-    // Generate email confirmation token
-    const confirmToken = await newuser.EmailConfirmationToken()
+    console.log(newuser)
+    if(!newuser) return next(new appError('Invalid Input data !!'))
     // update database
     await newuser.save({validateBeforeSave: false})
     // returns the token and sets confirmationToken and confirmationTokenExpires properties on the newuser.
-    const url = `${req.protocol}://${req.get('host')}/emailverified/${confirmToken}`
+    const url = `${req.protocol}://${req.get('host')}/verifyEmail`
     try
     {
         // send emailconfirmation message
         await new email(newuser, url).confirmEmail()
-            // sending the response for our api
-            if(req.originalUrl.startsWith('/api')){
-                res.status(201).json({
-                    status: "success", 
-                    message: "please confirm your email address by clicking the link sent to your email"
-                })
-            }
+        console.log('email sent')
+        // sending response for api requests
+        if(req.originalUrl.startsWith('/api')){
+            return res.status(200).json({
+                status: "success",
+                message: "Token sent to email"
+            })
+        }
+        // Generate email confirmation token
+        const confirmToken = await newuser.EmailConfirmationToken()
+        console.log(confirmToken)
+        // send the confirmation token as a cookie
+        const cookieOptions = {
+            expires: new Date(Date.now()+ 30 * 1000),
+            httpOnly: true,
+            secure: true
+        }
+        res.cookie('confirmtoken', confirmToken, cookieOptions)
     }
     catch(err){
         // if sending the email fails for some reason
@@ -78,14 +91,13 @@ exports.signup = catchasync( async (req, res, next) => {
 // confirm new user
 exports.confirmEmail = catchasync( async (req, res, next) => {
         // encrypting the token sent to the email to compare with thhe confirmationToken in the database.
-        const hashedtoken = crypto.createHash('sha256').update(req.params.id).digest('hex')
+        const hashedtoken = crypto.createHash('sha256').update(req.cookies.confirmtoken).digest('hex')
         console.log(hashedtoken)
         // check if the confirmation link has not expired
         const user = await userModel.findOne({
             confirmationToken: hashedtoken,
             confirmationTokenExpires: {$gt: Date.now()}
         })
-        console.log(user)
         if(!user){
             // removing the new user if their confirmation link has expired.
             await userModel.deleteOne({confirmationToken: hashedtoken})
@@ -98,9 +110,9 @@ exports.confirmEmail = catchasync( async (req, res, next) => {
         user.active = true,
         // update the database
         await user.save({validateBeforeSave: false})
-        req.confirmationToken = undefined
-        // jwt token 
-        GenerateToken(user, 201, res)
+        GenerateToken(user, 200, req, res)
+        // redirect user to the home page
+        res.redirect('/')
 })
 // logg in user
 exports.login = catchasync( async (req, res, next) => {
@@ -131,7 +143,7 @@ exports.login = catchasync( async (req, res, next) => {
     if(user.active === false) return next(new appError('This user has been deleted'))
     // if everything is ok, send token
     req.session.loginAttempts = 0
-    GenerateToken(user, 200, res)
+    GenerateToken(user, 200, req, res)
 })
 
 // LOG out user
@@ -211,7 +223,7 @@ exports.forgotPassword = catchasync( async (req, res, next) => {
     // saving the encrypted request token and its expire date into our database
     await user.save({validateBeforeSave: false})
     // reset url to send email to the user
-    const resetUrl = `${req.protocol}://${req.get('host')}/resetPassword/${resetToken}`
+    const resetUrl = `${req.protocol}://${req.get('host')}/resetPassword`
     // If sending the email fails for some reason we have to unset the passwordResetToken and passwordResetExpires property of the user in the database. but we can't do this if we used the catchAsyc function. we need a new try catch block
     try{
         // sending the email
@@ -222,6 +234,13 @@ exports.forgotPassword = catchasync( async (req, res, next) => {
         //     // we can insert an html code to be displayed for the user in the email
         // })
         await new email(user, resetUrl).resetpassword()
+        // send the password reset token as a cookie
+        const cookieOptions = {
+            expires: new Date(Date.now()+ 30 * 1000),
+            httpOnly: true,
+            secure: true
+        }
+        res.cookie('resettoken', resetToken , cookieOptions)
         // sending response for api requests
         if(req.originalUrl.startsWith('/api')){
             res.status(200).json({
@@ -243,12 +262,11 @@ exports.forgotPassword = catchasync( async (req, res, next) => {
 
 exports.resetPassword = catchasync( async (req, res, next) => {
     // 1. Encrypting the unencrypted token that we sent on the url by email to compare with passwordResetToken property on the database to identify if the user owns thier email they provided.
-    const hashedtoken = crypto.createHash('sha256').update(req.params.token).digest('hex')
+    const hashedtoken = crypto.createHash('sha256').update(req.cookies.resettoken).digest('hex')
     // filter a user who's passwordResetToken property matches the token in the url and it's password has not expired.
     const user = await userModel.findOne({
         passwordResetToken: hashedtoken,
-        passwordResetExpires: {$gt: Date.now()
-        }
+        passwordResetExpires: {$gt: Date.now()}
     })
     console.log(user)
     if(!user){
@@ -261,11 +279,12 @@ exports.resetPassword = catchasync( async (req, res, next) => {
     user.passwordConfirm = req.body.passwordConfirm
     user.passwordResetToken = undefined
     user.passwordResetExpires = undefined
+    req.cookies.resettoken = ''
     // update the database
          // we want the validator to check if the password and passwordConfirm actually match in this case.
     await user.save() 
     // log in user
-    GenerateToken(user, 200, res)
+    GenerateToken(user, 200, req, res)
 })
 
 exports.updatePassword = catchasync( async (req, res, next) => {
@@ -281,7 +300,7 @@ exports.updatePassword = catchasync( async (req, res, next) => {
             // We want the mongoose validator to check if password and passwordConfirm are the same.
     await user.save()
     // 5. log in user again
-    GenerateToken(user, 200, res)
+    GenerateToken(user, 200, req, res)
 })
 
 //Authorization process

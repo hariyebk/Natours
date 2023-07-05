@@ -14,9 +14,11 @@ router.get('/signup', routecontroller.signup)
 // email confirmation
 router.get('/confirmEmail', routecontroller.confirmEmail)
 // user verfied their email
-router.get('/emailverified/:id?', routecontroller.verified)
+router.get('/verifyEmail', authcontroller.confirmEmail)
+// forgot password page
+router.get('/forgotpassword', routecontroller.forgotpassword)
 // reset new password
-router.get('/resetPassword/:token?', routecontroller.resetPassword)
+router.get('/resetPassword', routecontroller.resetPassword)
 // user's page
 router.get('/me', authcontroller.protect, routecontroller.getAccount)
 // router.post('/submit-user-data', authcontroller.protect, routecontroller.updateuserdata)

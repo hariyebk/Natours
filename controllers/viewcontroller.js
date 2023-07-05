@@ -39,17 +39,22 @@ exports.confirmEmail = (req, res) => {
         title: 'Confirm your email'
     })
 }
+exports.forgotpassword = (req, res) => {
+    res.status(200).render('forgotpassword', {
+        title: 'Forgot Password'
+    })
+}
 exports.resetPassword = (req, res) => {
     res.status(200).render('resetPasswords', {
         title: 'Reset Password',
     })
 }
-exports.verified = (req, res) => {
-    // verfiy confirmation token 
-    authcontroller.confirmEmail()
-    // redirect user to the home page
-    res.redirect('/')
-}
+// exports.verified =  (req, res, next) => {
+//     // verify user email
+//     authcontroller.confirmEmail()
+//     // redirect user to the home page
+//     res.redirect('/')
+// }
 exports.getAccount = (req, res) => {
     res.status(200).render('userprofile', {
         title: 'My Account'

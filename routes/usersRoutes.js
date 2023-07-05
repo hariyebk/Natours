@@ -12,7 +12,7 @@ router.get('/confirmEmail/:token', authentication.confirmEmail)
 router.post('/login', authentication.login)
 router.get('/logout', authentication.logout)
 router.post('/forgotPassword', authentication.forgotPassword)
-router.patch('/resetPassword/:token', authentication.resetPassword)
+router.patch('/resetPassword', authentication.resetPassword)
 
 // since middlewares run based on order. all endpoints that come next will be secured.
 router.use(authentication.protect)
