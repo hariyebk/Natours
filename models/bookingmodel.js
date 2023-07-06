@@ -26,13 +26,16 @@ const bookingSchema = new mongoose.Schema({
     
 }) 
 // populating refrences with actual data
-bookingSchema.pre(/^find/, function(next){
-    this.populate({
-        path: 'tour',
-        select: 'name'
-    }).populate('user')
-    next()
-})
+// bookingSchema.pre(/^find/, function(next){
+//     this.populate({
+//         path: 'tour',
+//         select: ['name', 'id']
+//     }).populate({
+//         path: 'user',
+//         select: ['name', 'id']
+//     })
+//     next()
+// })
 
 const bookingModel = mongoose.model('bookings', bookingSchema)
 

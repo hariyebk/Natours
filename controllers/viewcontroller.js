@@ -59,6 +59,16 @@ exports.getMytours = catchAsyc( async (req, res, next) => {
     const tourIds = bookings.map(el => el.tour)
     // actual tour data based
     const tours = await Model.find({_id: {$in: tourIds}})
+    // for api requests
+    if(req.originalUrl.startsWith('/api')){
+        // we only want to send the name of the tours that the user has booked if the request comes from the api.
+        const Tours = tours.map(tour => tour.name)
+        return res.status(200).json({
+            status: "success",
+            results: tours.length,
+            Tours
+    })
+}
     // PICKS all the tours if their id's is found on the tourIds array.
     res.status(200).render('overview', {
         title: 'My-Tours',
@@ -68,6 +78,22 @@ exports.getMytours = catchAsyc( async (req, res, next) => {
 exports.getMyreviews = catchAsyc( async (req, res, next) => {
     // find the reviews the user has made
     const reviews = await reviewModel.find({user: req.user.id})
+    // for api requests
+    if(req.originalUrl.startsWith('/api')){
+        // we only return the following fields for My-review api endpoint call.
+        const Reviews = reviews.map(r => {
+            return {
+                tour: r.tour.name,
+                rating: r.rating,
+                review: r.review
+            }
+        })
+        return res.status(200).json({
+            status: "success",
+            results: reviews.length,
+            Reviews
+        })
+    }
     // display review cards
     res.status(200).render('reviews', {
         title: 'My Reviews',

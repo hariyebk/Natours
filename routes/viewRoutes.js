@@ -23,7 +23,7 @@ router.get('/resetpassword', routecontroller.resetPassword)
 // user's page
 router.get('/me', authcontroller.protect, routecontroller.getAccount)
 // Tours the user has booked
-router.get('/My-tours', authcontroller.protect, routecontroller.getMytours)
+router.get('/My-tours', authcontroller.protect,  routecontroller.getMytours)
 // Tours the user has reviews
 router.get('/My-reviews', authcontroller.protect, routecontroller.getMyreviews)
 // router.post('/submit-user-data', authcontroller.protect, routecontroller.updateuserdata)

@@ -2,12 +2,14 @@ const express = require('express');
 const routehandlers = require('../controllers/tourscontroller');
 const authcontroller = require('../controllers/authcontroller')
 const reviewrouter = require('../routes/reviewRoutes')
+const bookingRouter = require('./bookingRoutes')
 // creating a router object that handroutehandlers.les different routes.
 const router = express.Router();
 // router.param('id', routehandlers.idchecker);
 
-// Nested Route: redirecting to the child Router
+// Nested Routes: redirecting to the child Router
 router.use('/:TourId/reviews', reviewrouter)
+router.use('/:TourId/bookings', bookingRouter)
 // tour stats
 router
 .route('/stats')

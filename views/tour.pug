@@ -75,6 +75,8 @@ block content
                 +reviewCard(review)
     section.section-cta
         .cta
+            - if(user.bookings.includes(tour.id))
+            
             .cta__img.cta__img--logo
                 img(src='/img/logo-white.png', alt='Natours logo')
             img.cta__img.cta__img--1(src=`/img/tours/${tour.images[0]}`, alt='')
