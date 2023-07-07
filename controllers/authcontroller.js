@@ -195,6 +195,7 @@ exports.isLoggedIn = catchasync(async ( req, res, next) => {
             //4. check if the user has chaged their password after the token has been issued.
             if(await currentuser.checkIfPasswordChanged(decoded.iat)) return next()
              // if it reaches this point that means the user is logged in , so create a variable to be accessible by the template.
+            req.user = currentuser
             res.locals.user = currentuser
             return next()
         }

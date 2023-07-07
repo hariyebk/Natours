@@ -7,7 +7,7 @@ const authcontroller = require('../controllers/authcontroller')
 // overview page
 router.get('/', bookingcontroller.createbookingbyCheckout, authcontroller.isLoggedIn,  routecontroller.overview)
 // Tours page
-router.get('/tour/:slug', authcontroller.isLoggedIn,  routecontroller.tour)
+router.get('/tour/:slug', authcontroller.isLoggedIn, routecontroller.checkifbooked, routecontroller.tour)
 // Log in page
 router.get('/login', authcontroller.isLoggedIn,  routecontroller.login)
 // sign up page

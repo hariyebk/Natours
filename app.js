@@ -10,6 +10,7 @@ const globalErrorHandler = require('./controllers/errorHandler')
 const rateLimit = require('express-rate-limit')
 const session = require('express-session')
 const helmet = require('helmet')
+const compression = require('compression')
 const path = require('path')
 const mongoSanitize = require('express-mongo-sanitize')
 const xss = require('xss-clean')
@@ -69,6 +70,8 @@ app.use(session({
     saveUninitialized: false,
     store: null
 }))
+// A middleware that compresses the responses that will be sent json and HTML.
+app.use(compression())
 // custom middlwware 
 // app.use((req, res, next) => {
 //     req.requestedTime = new Date().toISOString()
@@ -107,7 +110,6 @@ app.use('/api/v1/tours', toursrouter)
 app.use('/api/v1/users', usersrouter)
 app.use('/api/v1/reviews', reviewrouter)
 app.use('/api/v1/bookings', bookingRouter)
-
 app.use('/', viewRouter)
 
 // handling unhandled routes

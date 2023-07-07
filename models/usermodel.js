@@ -47,13 +47,6 @@ const userSchema = new mongoose.Schema({
             message: 'passwords are not the same'
         }
     },
-    // child refrencing
-    booked: [
-        {
-            type: mongoose.Schema.ObjectId,
-            ref: 'bookings'
-        }
-    ],
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,

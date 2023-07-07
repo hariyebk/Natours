@@ -16,6 +16,19 @@ exports.overview = catchAsync( async (req,res, next) => {
         tours
     })
 })
+exports.checkifbooked = catchAsyc( async (req, res, next) => {
+    if(req.user)
+    {
+        // find all bookings the user has booked
+        const bookings = await bookingModel.find({user: req.user.id})
+        //  tours id's from the bookings
+        const tourIds = bookings.map(el => el.tour).map(el => String(el))
+        // find the selected tour
+        const tour = await Model.find({slug: req.params.slug})
+        if(tourIds.includes(tour[0].id)) res.locals.booked = true
+    }
+    next()
+})
 exports.tour = catchAsync( async (req,res, next) => {
     const tour = await Model.findOne({slug: req.params.slug}).populate({
         path: 'reviews',
