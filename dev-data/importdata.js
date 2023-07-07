@@ -24,7 +24,7 @@ const tours = JSON.parse(fs.readFileSync(`${__dirname}/data/tours.json`, 'utf-8'
 // const users = JSON.parse(fs.readFileSync(`${__dirname}/data/users.json`, 'utf-8'))
 // const reviews = JSON.parse(fs.readFileSync(`${__dirname}/data/reviews.json`, 'utf-8'))
 
-console.log('finished extarcting Data')
+// console.log('finished extarcting Data')
 const upload = async () => {
     try{
         await Model.create(tours)

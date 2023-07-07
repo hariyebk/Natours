@@ -6,7 +6,7 @@ const handleCastError = err => {
 }
 const handleDuplicateError = err => {
     const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0]
-    console.log(value)
+    // console.log(value)
     const message = `Duplicate key error: ${value}. Please try another field`
     return new appError(message, 400)
 }
@@ -50,7 +50,7 @@ const sendErrorPord = (err, req, res) => {
             }
          // for programming or other unkown errors: don't leak error details, just say something nice and easy.
         else{
-            console.log(err)
+            // console.log(err)
             res.status(500).json({
                 status: 'Error',
                 message: 'Something went wrong !!'

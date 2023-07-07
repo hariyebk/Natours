@@ -2,14 +2,11 @@
 const mongoose = require('mongoose')
 const dotenv = require('dotenv')
 // taking care of bugs (programming errors) that might happen all over our modules.
-
-//TODO: TODO: TODO:
-// process.on('uncaughtException', err => {
-//     console.log('uncaught exception: shutting down...')
-//     console.log(err.name, err.message, err.stack)
-//     process.exit(1)
-// })
-//TODO: TODO: if the user sent an inavlid reset token. passwordReserToken and passwordResetTokenExpiers properties should be eliminated.
+process.on('uncaughtException', err => {
+    console.log('uncaught exception: shutting down...')
+    console.log(err.name, err.message, err.stack)
+    process.exit(1)
+})
 dotenv.config({path: './config.env'}) // setting our enviroment variables into nodejs.
 const app = require('./app')
 const db = process.env.DATABSE_CONNECTION_STRING 

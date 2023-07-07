@@ -75,16 +75,23 @@ block content
                 +reviewCard(review)
     section.section-cta
         .cta
-            - if(user.bookings.includes(tour.id))
-            
-            .cta__img.cta__img--logo
-                img(src='/img/logo-white.png', alt='Natours logo')
-            img.cta__img.cta__img--1(src=`/img/tours/${tour.images[0]}`, alt='')
-            img.cta__img.cta__img--2(src=`/img/tours/${tour.images[1]}`, alt='')
-            .cta__content
-                h2.heading-secondary What are you waiting for?
-                p.cta__text= `${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`
-                if user
-                    button.btn.btn--green.span-all-rows#book-tour(data-tourId = `${tour.id}`) Book tour now!
-                else 
-                    a(href = '/login').btn.btn--green.span-all-rows Log In To book The Tour
+            - if(!booked)
+                .cta__img.cta__img--logo
+                    img(src='/img/logo-white.png', alt='Natours logo')
+                img.cta__img.cta__img--1(src=`/img/tours/${tour.images[0]}`, alt='')
+                img.cta__img.cta__img--2(src=`/img/tours/${tour.images[1]}`, alt='')
+                .cta__content
+                    h2.heading-secondary What are you waiting for?
+                    p.cta__text= `${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`
+                    if user
+                        button.btn.btn--green.span-all-rows#book-tour(data-tourId = `${tour.id}`) Book tour now!
+                    else 
+                        a(href = '/login').btn.btn--green.span-all-rows Log In To book The Tour
+            - else 
+                .cta__img.cta__img--logo
+                    img(src='/img/logo-white.png', alt='Natours logo')
+                img.cta__img.cta__img--1(src=`/img/tours/${tour.images[0]}`, alt='')
+                img.cta__img.cta__img--2(src=`/img/tours/${tour.images[1]}`, alt='')
+                .cta__content
+                    h2.heading-secondary We Love to hear your experience
+                    a(href = '#').btn.btn--green.span-all-rows Rate and Review
