@@ -1,7 +1,7 @@
 
 # Natours
 
-Natours is a project created as part of the Node.js, Express, Mongoose, and MongoDB boot camp on [Udemy](https://www.udemy.com/course/nodejs-express-mongodb-bootcamp/) by instructor Jonas Schmedtmann. It is a Tour web application powered by a RESTful API and various features such as authentication, security, server-side rendering, credit card payments using Stripe, sending emails, image uploading, and many more. It allows users to book tours of their desire and manage their accounts.
+Natours is a Tour web application powered by a RESTful API and various features such as authentication, security, server-side rendering, credit card payments using Stripe, sending emails, image uploading, and many more. It allows users to book tours of their desire and manage their accounts.
 
 <h1 align="center">
     <img src="logo.png"/>
