@@ -1,7 +1,7 @@
 
 # Natours
 
-Natours is a Tour web application powered by a RESTful API and various features such as authentication, security, server-side rendering, credit card payments using Stripe, sending emails, image uploading, and many more. It allows users to book tours of their desire and manage their accounts.
+Natours is a Tour web application built as part of my 4-month remote Internship at [Trip.com](https://www.trip.com/). It is powered by a RESTful API and various features such as authentication, security, server-side rendering, credit card payments using Stripe, sending emails, image uploading, and many more. It allows users to book tours of their desire and manage their accounts.
 
 <h1 align="center">
     <img src="logo.png"/>
